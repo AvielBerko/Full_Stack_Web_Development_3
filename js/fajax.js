@@ -232,7 +232,7 @@ class FXMLHttpRequest extends EventTarget {
             return null;
         }
 
-        return this.responseHeaders[header];
+        return this.requestHeaders[header];
     }
 
     /**

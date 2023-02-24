@@ -8,6 +8,8 @@
  * @file fajax.js
  */
 
+"use strict";
+
 /**
  * Network is a static class that creates a fake network. Before using it, the
  * class must contain a server using the function Network.setServer().
@@ -89,7 +91,7 @@ class Network {
  * Methods:
  * * Default constructor
  * * open(method, url)
- * * addRequestHeader(header, value)
+ * * setRequestHeader(header, value)
  * * addEventListener("load", callback)
  * * send(body)
  * * getResponseHeader(header)
@@ -102,9 +104,12 @@ class Network {
  * * responseText
  *
  * For the server, this class implements the following methods and properties:
- * * setStatus(status, statusText).
- * * addResponseHeader(header, value).
- * * responseText.
+ * * method
+ * * url
+ * * getRequestHeader(header)
+ * * setStatus(status, statusText)
+ * * addResponseHeader(header, value)
+ * * responseText
  */
 class FXMLHttpRequest extends EventTarget {
     /**
@@ -206,6 +211,31 @@ class FXMLHttpRequest extends EventTarget {
     }
 
     /**
+     * Returns a string containing the response header's value or null if the
+     * header wasn't found.
+     */
+    getResponseHeader(header) {
+        if (this.readyState < 4 || !this.responseHeaders[header]) {
+            return null;
+        }
+
+        return this.responseHeaders[header];
+    }
+
+    /**
+     * Returns a string containing the request header's value or null if the
+     * header wasn't found. This function works only at the server, or it will
+     * return null.
+     */
+    getRequestHeader(header) {
+        if (this.readyState !== 5 || !this.requestHeaders[header]) {
+            return null;
+        }
+
+        return this.responseHeaders[header];
+    }
+
+    /**
      * Sets the response status. Can be used only in the server. Nothing will
      * happend if it was called in the client.
      *
@@ -248,18 +278,6 @@ class FXMLHttpRequest extends EventTarget {
             statusText = statusTexts[status] ?? "";
         }
         this.statusText = statusText.toString();
-    }
-
-    /**
-     * Returns a string containing the header's value or null if the header
-     * wasn't found.
-     */
-    getResponseHeader(header) {
-        if (this.readyState < 4 || !this.responseHeaders[header]) {
-            return null;
-        }
-
-        return this.responseHeaders[header];
     }
 
     /**

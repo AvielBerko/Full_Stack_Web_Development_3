@@ -141,10 +141,17 @@ class FXMLHttpRequest extends EventTarget {
     /**
      * Initinalizes a new request or an existing one.
      *
+     * Can be called only when readyState is UNSET or DONE, or otherwise an
+     * exception will be thrown.
+     *
      * @param method The Http request method.
      * @param url The url to send this request.
      */
     open(method, url) {
+        if (readyState !== 0 && readyState !== 4) {
+            throw new Error("Called FXMLHttpRequest.open() in wrong state");
+        }
+
         this.method = method;
         this.url = url;
         this.body = null;

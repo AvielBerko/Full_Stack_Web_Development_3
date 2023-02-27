@@ -148,7 +148,7 @@ class FXMLHttpRequest extends EventTarget {
      * @param url The url to send this request.
      */
     open(method, url) {
-        if (readyState !== 0 && readyState !== 4) {
+        if (this.readyState !== 0 && this.readyState !== 4) {
             throw new Error("Called FXMLHttpRequest.open() in wrong state");
         }
 

@@ -1,8 +1,8 @@
 /**
- * This file contains a fake database system. The database system has the
+ * This file contains a database system. The database system has the
  * following classes:
- * * Database: An abstract static database class with all needed tasks (CRUD).
- * * LocalStorageDB: An implementation of Database class using localStorage.
+ * * Database: A database class with all needed tasks (CRUD).
+ * * LocalStorageDB: An implementation of database's storage using localStorage.
  *
  * @file database.js
  */
@@ -11,16 +11,13 @@
 
 
 /**
- * LocalStorageDB is a static implementation of abstract Database class.
- * It copies the database tables from localStorage (or creates it if it doesn't exist).
- * It implements the get, set, remove functions from Database's class.
+ * LocalStorageDB is a storage implementation for Database class.
+ * It implements the get, set, remove functions.
  */
 class LocalStorageDB {
 
     /**
      * Sets an item in the Database.
-     * This is a "pure" virtual function where the implementation is up to the inherited
-     * class.
      * @param id - The item's UUID in the DB.
      * @param value - The item's value.
      */
@@ -30,8 +27,6 @@ class LocalStorageDB {
 
     /**
      * Gets an item from the Database.
-     * This is a "pure" virtual function where the implementation is up to the inherited
-     * class.
      * @param id - The item's UUID in the DB.
      */
     getItem(id) {
@@ -41,8 +36,6 @@ class LocalStorageDB {
 
     /**
      * Removes an item from the Database.
-     * This is a "pure" virtual function where the implementation is up to the inherited
-     * class.
      * @param id - The item's UUID in the DB.
      */
     removeItem(id) {
@@ -51,7 +44,8 @@ class LocalStorageDB {
 }
 
 /**
- * Database is an abstract static class. 
+ * Database is a class that handles a single database in a given storage.
+ * Every instance of the class needs to be given a name and a storage.
  * The data is saved in tables where each table containt a list of it's items keys.
  * In order to implement this class, one should implement the getItem, setItem and removeItem functions.
  */
@@ -62,13 +56,22 @@ class Database {
     #dbTables = [];
 
     /**
-     * This constactor makes the Database class abstract so that no instances can
-     * be created.
+     * Database's constractor - sets it's name and storage, and saves a local copy
+     * of database's tables.
+     * @param storage - The storage used to store the database.
+     * @param dbName - The name of the database.
      */
     constructor(storage, dbName) {
         this.storage = storage;
         this.dbName = dbName;
-        this.#dbTables = storage.getItem(dbName) ?? [];
+        const dbTables = storage.getItem(dbName);
+        if (!dbTables) {
+            storage.setItem(dbName, []);
+            this.#dbTables = [];
+        }
+        else {
+            this.#dbTables = dbTables;
+        }
     }
 
     /**
@@ -114,7 +117,7 @@ class Database {
         if (!this.#tableExists(table)) {
             throw Error(`Table ${table} does not appear in database`)
         }
-        const tableContent = this.getItem(table);
+        const tableContent = this.storage.getItem(table);
         for (let id of tableContent) {
             this.storage.removeItem(id);
         }

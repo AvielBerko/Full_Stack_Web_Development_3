@@ -141,7 +141,7 @@ class Database {
             const itemIDs = this.get(table);
             for (let id of itemIDs) {
                 const item = this.get(id);
-                items.push(item);
+                items.push({uuid: id, obj: item});
             }
             return items;
         }
@@ -157,9 +157,9 @@ class Database {
      * @param table - The table to add the item to.
      * @returns - The uniqe UUID of the new item.
      */
-    add(item, table) {
+    add(item, table, uuid = null) {
         const tableContent = this.get(table)
-        const itemID = generateUUID();
+        const itemID = uuid ?? generateUUID();
         item.table = table;
         tableContent.push(itemID);
         this.storage.setItem(table, tableContent);

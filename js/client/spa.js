@@ -47,13 +47,18 @@ class Page extends EventTarget {
     }
 
     /**
-     * Displays the page in the html.
+     * Displays the page in the html inside the element with the id spa-target.
      */
     enter() {
+        const target = document.getElementById("spa-target");
+        if (!target) {
+            throw new Error("Missing a html element with the id spa-target");
+        }
+
         this.page = document.createElement("div");
         this.page.id = "page-" + this.name;
-        document.body.append(this.page);
         this.page.append(this.template.content.cloneNode(true));
+        target.append(this.page);
 
         document.querySelectorAll(".spa-nav").forEach((nav) => {
             nav.addEventListener("click", (ev) => {
@@ -122,6 +127,7 @@ class App {
     static init(defaultPage, pages) {
         App.pages = pages;
         App.defaultPage = defaultPage;
+        App.context = {};
 
         // Hook the pages' exit event.
         Object.values(App.pages).forEach((page) => {

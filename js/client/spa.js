@@ -18,13 +18,13 @@
  * * A template with the id 'template-{page's name}' must exist in the html
  *   DOM.
  * * All navigable buttons can have the class '.spa-nav' for auto navigation.
- * * The function enter() can be overwritten, however, it must call
- *   super.enter().
- * * The function onNav() can be overwritten to control page navigation after a
- *   navigable button was clicked.
+ * * The function enter(...args) can be overwritten, however, it must call
+ *   super.enter(...args).
+ * * The function onNav(ev) can be overwritten to control page navigation after
+ *   a navigable button was clicked.
  * * The function clear() can be overwritten and is called just before
  *   navigating, however, it must call super.clear().
- * * Call navigate(page) to navigate into a different page.
+ * * Call navigate(page, ...args) to navigate into a different page.
  */
 class Page extends EventTarget {
     /**
@@ -57,9 +57,13 @@ class Page extends EventTarget {
 
         document.querySelectorAll(".spa-nav").forEach((nav) => {
             nav.addEventListener("click", (ev) => {
-                const navPage = this.onNav(ev);
-                if (navPage) {
-                    this.navigate(navPage);
+                const result = this.onNav(ev);
+                if (result) {
+                    if (typeof(result) === "string") {
+                        this.navigate(result);
+                    } else {
+                        this.navigate(...result);
+                    }
                 }
             });
         });
@@ -70,20 +74,24 @@ class Page extends EventTarget {
      * to navigate, or to block the navigation.
      *
      * @param ev The click event object.
-     * @return The page name to navigate into, or null to cancel navigation.
+     * @return String with the page name, or Array with page name and arugments
+     *         where the page name is the first item, or null to cancel
+     *         navigation.
      */
     onNav(ev) {
     }
 
     /**
-     * Navigate into a given page or the default page.
+     * Navigate into a given page or the default page with arguments.
      *
      * @param page The page's name to navigate into, or null to navigate into
      *             the default page.
+     * @param ...args Optional. The arguments to pass into the new page.
      */
-    navigate(page) {
+    navigate(page, ...args) {
         this.clear();
         this.exitEvent.page = page;
+        this.exitEvent.args = args ?? [];
         this.dispatchEvent(this.exitEvent);
     }
 
@@ -136,7 +144,7 @@ class App {
     static pageExit(ev) {
         App.currentPage = App.pages[ev.page ?? App.defaultPage] ??
                           App.pages[App.defaultPage];
-        App.currentPage.enter();
+        App.currentPage.enter(...ev.args);
         history.pushState({}, null, `#${App.currentPage.name}`);
     }
 

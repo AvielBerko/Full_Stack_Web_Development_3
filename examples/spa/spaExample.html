@@ -1,0 +1,87 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <title>SPA Example</title>
+    <script src="../../js/client/spa.js"></script>
+    <script src="spaExample.js"></script>
+</head>
+<body>
+    <h1>SPA Example</h1>
+
+    <template id="template-login">
+        <h2>Login</h2>
+        <div style="background-color: blue; color: white">
+            <p id="info"></p>
+        </div>
+        <div style="background-color: red; color: white">
+            <p id="error"></p>
+        </div>
+        <div>
+            <input type="text" placeholder="Username" id="username">
+        </div>
+        <div>
+            <input type="password" placeholder="Password" id="password">
+        </div>
+        <div>
+            <button class ="spa-nav" id="login">Login</button>
+        </div>
+        <div>
+            Don't have an account?
+            <button class="spa-nav" id="register">Register</button>
+        </div>
+    </template>
+
+    <template id="template-register">
+        <h2>Register</h2>
+        <div>
+            <input type="text" placeholder="Username" id="username">
+        </div>
+        <div>
+            <input type="email" placeholder="Email" id="email">
+        </div>
+        <div>
+            <input type="password" placeholder="Password" id="password">
+        </div>
+        <div>
+            <button class ="spa-nav" id="register">Register</button>
+        </div>
+        <div>
+            Already have an account?
+            <button class="spa-nav" id="login">Login</button>
+        </div>
+    </template>
+
+    <template id="template-game">
+        <h2>Game - Flip a coin</h2>
+        <h3 id="username">Hello</h3>
+        <table>
+            <tr>
+                <th></th>
+                <th>Wins</th>
+                <th>Loses</th>
+            </tr>
+            <tr>
+                <th>Heads:</th>
+                <td id="tblHeadsWins">0</td>
+                <td id="tblHeadsLoses">0</td>
+            </tr>
+            <tr>
+                <th>Tails:</th>
+                <td id="tblTailsWins">0</td>
+                <td id="tblTailsLoses">0</td>
+            </tr>
+            <tr>
+                <th>Overall:</th>
+                <td id="tblOverallWins">0</td>
+                <td id="tblOverallLoses">0</td>
+        </table>
+        <div>
+            <button id="btnHeads">Heads</button> or
+            <button id="btnTails">Tails</button> ?
+            <p id="result"></p>
+        </div>
+        <button class="spa-nav" id="logout">Logout</button>
+    </template>
+</body>
+</html>

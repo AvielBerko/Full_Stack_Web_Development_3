@@ -152,8 +152,8 @@ class FXMLHttpRequest extends EventTarget {
             throw new Error("Called FXMLHttpRequest.open() in wrong state");
         }
 
-        this.method = method;
-        this.url = url;
+        this.method = method.toUpperCase();
+        this.url = url.toLowerCase();
         this.body = null;
         this.readyState = 1;
         this.requestHeaders = {};
@@ -270,7 +270,7 @@ class FXMLHttpRequest extends EventTarget {
             return;
         }
 
-        this. status = status;
+        this.status = status;
         if (statusText === undefined || statusText === null) {
             const statusTexts = {
                 200: "OK",

@@ -18,14 +18,12 @@ const ATTEMPTS_MAX = 5;
 /* Number of minutes the attempts cookie stays alive. */
 const ATTEMPTS_MINUTES = 10;
 
+
 class LoginPage extends Page {
 
     constructor() {
         super('login');
     }
-
-
-
 
     enter(...args) {
         if (!this.logout(args[0])) {
@@ -46,9 +44,17 @@ class LoginPage extends Page {
         }
     }
 
-    // onNav(ev) {
-    //     return ["login", apiKey];
-    // }
+    onNav(ev) {
+        switch (ev.target.id) {
+            case "forgot-password":
+                return "login";  // TODO FIX
+            case "register":
+            case "register-fb":
+            case "register-tw":
+            case "register-gg":
+                return "register";
+        }
+    }
 
     /*
     * Checks if last user wanted to auto login. If they wanted, then it auto
@@ -58,10 +64,7 @@ class LoginPage extends Page {
         const apiKey = getCookie(APIKEY_COOKIE_NAME);
 
         if (apiKey) {
-            const username = getCookie(LOGIN_COOKIE_NAME);
-            if (username) {
-                this.getin(username, apiKey);
-            }
+            this.getin(apiKey);
         }
     }
 
@@ -79,9 +82,8 @@ class LoginPage extends Page {
             password: this.loginFormElements.password.value
         };
 
-        if (credentials.username.trim() === '' || credentials.password.trim() === '') {
+        if (Object.values(credentials).some((value) => value.trim() === ""))
             return;
-        }
 
         const attemptsCookie = credentials.username + ATTEMPTS_COOKIE_POSTFIX;
         const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
@@ -94,9 +96,7 @@ class LoginPage extends Page {
         const request = new FXMLHttpRequest();
 
         request.onload = () => {
-            if (request) {
                 this.handleLoginResponse(request);
-            }
         };
 
         const requestData = JSON.stringify(credentials);
@@ -125,37 +125,27 @@ class LoginPage extends Page {
     }
 
     login(/*username, */apiKey) {
-        this.setAutoLogin(apiKey);
+        setAutoLogin(apiKey);
         this.getin(apiKey);
     }
 
-
-    logoutReguest() {
+    requestLogout(apiKey) {
         const request = new FXMLHttpRequest();
         request.onload = () => {
-            let responseObject = null;
-
-            try {
-                responseObject = JSON.parse(request.responseText);
-            } catch (e) {
-                console.error('Could not parse JSON!');
-            }
-
-            if (responseObject) {
-                this.handleLogoutResponse(responseObject);
-            }
+            this.handleLogoutResponse(request);
         };
 
-        const requestData = //`apikey=${apiKey}`;
-
-            request.open('post', '/logout');
-        request.send(requestData);
+        request.open('post', '/logout');
+        request.send(apiKey);
     }
 
-    handleLogoutResponse(responseObject) {
-        if (responseObject.status === 200) {
+    handleLogoutResponse(request) {
+        if (request.status === 200) {
             console.log("Logout successful!");
             this.logout();
+        }
+        else {
+            console.error(`Logout failed - responseText = ${request.responseText}`)
         }
     }
 
@@ -165,8 +155,10 @@ class LoginPage extends Page {
     * Returns `true` if logged out. Otherwise, returns `false`.
     */
     logout() {
-        sessionStorage.removeItem('currentUsername');
-        removeCookie(LOGIN_COOKIE_NAME);
+        //sessionStorage.removeItem('currentUsername');
+        removeCookie(APIKEY_COOKIE_NAME);
+        removeCookie()
+        //this.navigate(null);  // Move to main page
         return true;
     }
 
@@ -186,15 +178,84 @@ class LoginPage extends Page {
 }
 
 
+class RegisterPage extends Page {
+    constructor() {
+        super('register');
+    }
 
-// const signupLink = document.getElementById('signup-link');
-// signupLink.addEventListener('click', (event) => {
+    enter(...args) {
+        super.enter(...args);
+        const registerForm = document.getElementById('register-form');
 
-// });
+        registerForm.addEventListener("submit", (ev) => {
+            ev.preventDefault();  // prevent the form from submitting
+            this.requsetRegister();
+        });
+
+        this.registerFormElements = {
+            username: document.getElementById('username'),
+            password: document.getElementById('password'),
+            passwordVal: document.getElementById('password-val'),
+            submit: document.getElementById('submit-button')
+        }
+    }
+
+    onNav(ev) {
+        return "login";
+    }
+
+    requsetRegister() {
+        const credentials = {
+            username: this.registerFormElements.username.value,
+            password: this.registerFormElements.password.value,
+            passwordVal: this.registerFormElements.passwordVal.value,
+        };
+
+        if (Object.values(credentials).some((value) => value.trim() === "") || credentials.password != credentials.passwordVal)
+            return;
+        
+
+        const request = new FXMLHttpRequest();
+
+        request.onload = () => {
+                this.handleRegisterResponse(request);
+        };
+
+        const requestData = JSON.stringify((({username, password}) => ({username, password}))(credentials));
+
+        request.open('post', '/register');
+        request.send(requestData);
+    }
+
+    handleRegisterResponse(request) {
+        if (request.status === 200) {
+            console.log("Registered successful!");
+            this.login(request.responseText);
+
+        } else {
+            console.log(`Registration failed - ${request.responseText}`);
+        }
+    }
+
+    login(/*username, */apiKey) {
+        if (document.getElementById("chkAutoLogin").checked)
+            setAutoLogin(apiKey);   
+        this.getin(apiKey);
+    }
+
+    getin(/*username,*/ apiKey) {
+        // sessionStorage.currentUsername = username;
+        this.navigate('empty', apiKey);  // Move to main page
+    }
+
+}
 
 
 // ################################ VALIDATION ################################
-document.addEventListener('DOMContentLoaded', () => {
+LoginPage.addEventListener('exit',validatePage());
+RegisterPage.addEventListener('exit',validatePage());
+
+function validatePage() {
     var input100 = document.querySelectorAll('.input100');
     input100.forEach(function (input) {
         input.addEventListener('blur', function () {
@@ -206,8 +267,13 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     });
 
-    /* [ Validate ] */
     var input = document.querySelectorAll('.validate-input .input100');
+
+    input.forEach(function (input) {
+        input.addEventListener('focus', function () {
+            hideValidate(input);
+        });
+    });
 
     var validateForm = document.querySelectorAll('.validate-form');
     validateForm.forEach(function (form) {
@@ -223,15 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     });
 
-    input.forEach(function (input) {
-        input.addEventListener('focus', function () {
-            hideValidate(input);
-        });
-    });
-
     function validate(input) {
         if (input.value.trim() == '') {
             return false;
+        }
+        if (input.id === "password-val") {
+            return (document.getElementById("password").value === input.value)
         }
         return true;
     }
@@ -245,4 +308,4 @@ document.addEventListener('DOMContentLoaded', () => {
         var thisAlert = input.parentNode;
         thisAlert.classList.remove('alert-validate');
     }
-});
+}

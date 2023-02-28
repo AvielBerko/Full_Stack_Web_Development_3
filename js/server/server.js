@@ -30,8 +30,8 @@ class Server {
                 case '/logout':
                     this.#handleLogoutRequest(request);
                     break;
-                case '/regiser':
-                    this.#register(request);
+                case '/register':
+                    this.#handleRegisterRequest(request);
                     break;
             }
         }
@@ -65,16 +65,68 @@ class Server {
         }
         
         const apiKey = generateUUID();
-        this.db.add({apiKey: apiKey, username: credentials.username}, CONNECTED_CLIENTS_TABLE_NAME);
+        this.db.add({username: credentials.username}, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
         // this.db.add(credentials, USERS_TABLE_NAME);
         request.setStatus(200);
         request.responseText = apiKey;
     }
 
     #handleLogoutRequest(request) {
+        let apiKey;
+        if (request.method != 'POST') {
+            request.setStatus(501);
+            return;
+        }
+        try {
+            apiKey = JSON.parse(request.body)
+        }
+        catch {
+            request.setStatus(401);
+            return;
+        }
+
+        
+        const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
+        const filteredClient = allConnectedClients.filter((c) => (c.apiKey === apiKey));
+        if (!filteredClient.length) {
+            request.setStatus(401);
+            request.responseText = "Client's API Key is not registered!"
+            return;
+        }
+        
+        this.db.remove();
+        // this.db.add(credentials, USERS_TABLE_NAME);
+        request.setStatus(200);
+        request.responseText = apiKey;
     }
 
-    #register(request) {
+    #handleRegisterRequest(request) {
+        let credentials;
+        if (request.method != 'POST') {
+            request.setStatus(501);
+            return;
+        }
+        try {
+            credentials = JSON.parse(request.body)
+        }
+        catch {
+            request.setStatus(401);
+            return;
+        }
 
+        
+        const allUsers = this.db.getTableItems(USERS_TABLE_NAME);
+        const filteredUser = allUsers.filter((user) => (user.obj.username === credentials.username));
+        if (filteredUser.length) {
+            request.setStatus(401);
+            request.responseText = "Username is taken";
+            return;
+        }
+        
+        const apiKey = generateUUID();
+        this.db.add({username: credentials.username}, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
+        this.db.add(credentials, USERS_TABLE_NAME);
+        request.setStatus(200);
+        request.responseText = apiKey;
     }
 }

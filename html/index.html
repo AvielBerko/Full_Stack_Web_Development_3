@@ -2,86 +2,198 @@
 <html lang="en">
 
 <head>
-    <!-- basic -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-    <!-- site metas -->
-    <title>EA Games</title>
-    <link rel="icon" type="image/x-icon" href="../images/icon.jpg">
-    <!-- bootstrap css -->
-    <link rel="stylesheet" href="../css/reuse/bootstrap.min.css">
-    <!-- style css -->
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="shortcut icon" href="#">
+	<title>EA Games</title>
+	<link rel="icon" type="image/x-icon" href="../images/icon.jpg">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="../fonts/iconic/css/material-design-iconic-font.min.css">
+	<link rel="stylesheet" type="text/css" href="../fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="../css/reuse/util.css">
+	<link rel="stylesheet" type="text/css" href="../css/login.css">
+	<link rel="shortcut icon" href="#">
 </head>
-<!-- body -->
 
-<body class="main-layout">
-    <!-- header -->
-    <header>
-        <nav class="header_layout">
-            <div class="logo">
-                <a href="index.html"><img src="../images/logo1.jpg" alt="#" /></a>
-            </div>
-            <div class="header_links">
-                <div class="button_user"> <a class="button" id="signup-b" href="#">Sign Up</a></div>
-                <div class="button_user_active"> <a class="button" id="login-b" href="#">Log In</a>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <!-- end header -->
-    <!-- service -->
-    <section id="service" class="service">
-        <div class="container">
-            <div class="ourheading">
-                <h2>Our<strong class="white_ll"> games</strong></h2>
-                <span> From Tic Tac Toe to FIFA Online! We have every game imaginable.<br><small>(No multiplayer cause you got no friends...)</small>
-                </span>
-            </div>
-        </div>
-    </section>
-    <!-- end service -->
-    <!-- footer -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="footer_logo logo">
-                        <a href="index.html"><img src="../images/logo1.jpg" alt="#" /></a>
-                    </div>
-                </div>
-                <div class="col-md-12">
-                    <div class="contact-info">
-                        <p>
-                            Address: <a
-                                href="https://www.waze.com/en/live-map/directions/il/jerusalem-district/jerusalem/ha-vaad-ha-leumi-st-21?place=ChIJ8drxo7_XAhURfkch4t--FLE&utm_campaign=waze_website&utm_medium=website_menu&utm_source=waze_website"
-                                target="_blank">Ha-Va'ad ha-Le'umi St 21</a>
-                            <br>Tel: <a href="tel:+9729155988">+972-54-9155-988</a>
-                            <br> Email: <a href="mailto:9155988@gmail.com">9155988@gmail.com</a>
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-12">
-                    <ul class="lik">
-                        <li> <a href="https://www.facebook.com/nechamierenbergwigs/" target="_blank"><img
-                                    src="../images/fb.png" alt="#" /></a></li>
-                        <li> <a href="https://www.instagram.com/" target="_blank"><img src="../images/inst_logo.jpg"
-                                    alt="#" /></a></li>
-                        <li> <a href="https://www.youtube.com/watch?v=YE06YOvqKBI" target="_blank"> <img
-                                    src="../images/you.png" alt="#" /></a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- end footer -->
-    <script src="../js/cookie_handler.js"></script>
-    <script src="../js/utils.js"></script>
-    <script src="../js/main.js"></script>
-    <script src="../js/database.js"></script>
+<body>
+	<div id="spa-target"></div>
+	<template id="template-login" class="limiter">
+		<div class="container-login100" style="background-image: url('../images/bg-01.jpg');">
+			<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+				<form class="validate-form login100-form" id="login-form">
+					<span class="login100-form-title p-b-49" id="login-signup-h">
+						Login
+					</span>
+
+					<div class="wrap-input100 validate-input m-b-23" data-validate="Username is reauired">
+						<span class="label-input100">Username</span>
+						<input class="input100" id="username" type="text" name="username"
+							placeholder="Type your username">
+						<span class="focus-input100" data-symbol="&#xf206;"></span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate="Password is required">
+						<span class="label-input100">Password</span>
+						<input class="input100" id="password" type="password" name="pass"
+							placeholder="Type your password">
+						<span class="focus-input100" data-symbol="&#xf190;"></span>
+					</div>
+
+					<div class="auto-login">
+						<div class="p-t-8 p-b-31">
+							<input type="checkbox" id="chkAutoLogin" checked="True" />
+							<a>Stay signed in</a>
+						</div>
+						<div class="text-right p-t-8 p-b-31">
+							<a class="spa-nav">
+								Forgot password?
+							</a>
+						</div>
+					</div>
+
+					<div class="text-left p-t-8 p-b-31">
+
+					</div>
+
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn" id="submit-button">
+								Login
+							</button>
+						</div>
+					</div>
+
+					<div class="txt1 text-center p-t-129 p-b-20">
+						<span">
+							Or Sign In Using
+							</span>
+					</div>
+
+					<div class="flex-c-m">
+						<a class="login100-social-item bg1">
+							<i id="register-fb" class="fa fa-facebook spa-nav"></i>
+						</a>
+
+						<a class="login100-social-item bg2">
+							<i id="register-tw" class="fa fa-twitter spa-nav"></i>
+						</a>
+
+						<a class="login100-social-item bg3">
+							<i id="register-gg" class="fa fa-google spa-nav"></i>
+						</a>
+					</div>
+
+					<div class="flex-col-c p-t-80">
+						<span class="txt1 p-b-17" id="signup-text">
+							Or Sign Up Using
+						</span>
+
+						<a class="txt2 spa-nav" id="register">
+							Sign Up
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</template>
+	<template id="template-register" class="limiter">
+		<div class="container-login100" style="background-image: url('../images/bg-01.jpg');">
+			<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+				<form class="validate-form login100-form" id="register-form">
+					<span class="login100-form-title p-b-49" id="login-signup-h">
+						Register
+					</span>
+
+					<div class="wrap-input100 validate-input m-b-23" data-validate="Username is reauired">
+						<span class="label-input100">Username</span>
+						<input class="input100" id="username" type="text" name="username"
+							placeholder="Type your username">
+						<span class="focus-input100" data-symbol="&#xf206;"></span>
+					</div>
+
+					<div class="wrap-input100 validate-input m-b-23" data-validate="Password is required">
+						<span class="label-input100">Password</span>
+						<input class="input100" id="password" type="password" name="pass"
+							placeholder="Type your password">
+						<span class="focus-input100" data-symbol="&#xf190;"></span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate="Passwords does not match">
+						<span class="label-input100">Repeat Password</span>
+						<input class="input100" id="password-val" type="password" name="pass"
+							placeholder="Type your password again">
+						<span class="focus-input100" data-symbol="&#xf190;"></span>
+					</div>
+
+					<div class="auto-login">
+						<div class="p-t-8 p-b-31">
+							<input type="checkbox" id="chkAutoLogin" checked="True" />
+							<a>Stay signed in</a>
+						</div>
+					</div>
+
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn" id="submit-button">
+								Register
+							</button>
+						</div>
+					</div>
+
+					<div class="txt1 text-center p-t-64 p-b-20">
+						<span">
+							Or Login Using
+							</span>
+					</div>
+
+					<div class="flex-c-m">
+						<a class="login100-social-item bg1">
+							<i id="register-fb" class="fa fa-facebook spa-nav"></i>
+						</a>
+
+						<a class="login100-social-item bg2">
+							<i id="register-tw" class="fa fa-twitter spa-nav"></i>
+						</a>
+
+						<a class="login100-social-item bg3">
+							<i id="register-gg" class="fa fa-google spa-nav"></i>
+						</a>
+					</div>
+
+					<div class="flex-col-c p-t-80">
+						<span class="txt1 p-b-17" id="signup-text">
+							Or Login Using
+						</span>
+
+						<a class="txt2 spa-nav" id="register">
+							Login
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</template>
+	<template id="template-empty">
+		<button class="spa-nav" id="register">
+			Register
+		</button>
+		<button class="spa-nav" id="login">
+			Login
+		</button>
+		<button class="spa-nav" id="logout">
+			Logout
+		</button>
+	</template>
+	<div id="dropDownSelect1"></div>
+	<script src="../js/client/spa.js"></script>
+	<script src="../js/fajax.js"></script>
+	<script src="../js/utils.js"></script>
+	<script src="../js/server/database.js"></script>
+	<script src="../js/server/server.js"></script>
+	<script src="../js/client/login.js"></script>
+	<script src="../js/main.js"></script>
+	<script src="../js/cookie_handler.js"></script>
+
 </body>
 
 </html>

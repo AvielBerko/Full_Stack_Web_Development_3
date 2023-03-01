@@ -469,3 +469,9 @@ a:link {
   text-decoration: none;
   }
   
+.auto-login {
+  display: flex;
+  flex-direction: row;
+  margin-top: 15px;
+  justify-content: space-between;
+}

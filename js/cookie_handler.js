@@ -22,4 +22,7 @@ function resetCookie(name, value, max_age) {
         setCookie(name, value, max_age);
     }
 }
-// export {setCookie, getCookie};
+
+function removeCookie(name) {
+    setCookie(name, 0, 0);
+}

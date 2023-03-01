@@ -107,8 +107,7 @@ class TodosContext {
      * @param onmissing  Optional. A function that get no arguments.
      */
     updateProject(project, callback, onmissing) {
-        const updateReq = this.#createRequest("PUT",
-            `/projects/update/${project.id}`);
+        const updateReq = this.#createRequest("PUT", "/projects/update/");
         updateReq.onload = () => {
             if (updateReq.status === 404) {
                 onmissing?.();

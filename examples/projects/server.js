@@ -30,7 +30,7 @@ class Server {
                    request.method === "GET") {
             request.setStatus(200);
             request.responseText = this.projects.sync
-        } else if (request.url.startsWith('/projects/update/') &&
+        } else if (request.url === '/projects/update/' &&
                    request.method === "PUT") {
             const {id, title, description} = JSON.parse(request.body);
             if (!title) {

@@ -68,6 +68,7 @@ class ProjectsPage extends Page {
             this.createNewProject();
         };
 
+        this.setCurrentProject(null);
         App.context.todos.onUpdatedProjects =
             proj => this.displayProjects(proj);
         App.context.todos.syncProjects();
@@ -82,6 +83,7 @@ class ProjectsPage extends Page {
      */
     displayProjects(projects) {
         let currentProjectExists = false;
+        const lastProjectId = this.currentProject?.id;
 
         this.projectsContainer.innerHTML = '';
         for (const project of projects) {
@@ -91,16 +93,20 @@ class ProjectsPage extends Page {
             projElem.querySelector(".project-title").textContent
                 = project.title;
             projElem.querySelector(".project-btn").onclick = ev => {
+                this.setEditingProject(false);
                 this.setCurrentProject(project);
             }
             this.projectsContainer.append(projElem);
 
-            if (this.currentProject?.id === project.id) {
+            if (lastProjectId === project.id) {
+                // Don't change editing mode if found last project.
                 currentProjectExists = true;
+                this.setCurrentProject(project);
             }
         }
 
         if (!currentProjectExists) {
+            this.setEditingProject(false);
             this.setCurrentProject(projects[0]);
         }
     }
@@ -168,13 +174,11 @@ class ProjectsPage extends Page {
     setCurrentProject(project) {
         if (!project) {
             this.currentProject = null;
-            this.setEditingProject(false);
             this.projectHeader.classList.add("hidden");
             return;
         }
 
         this.currentProject = project;
-        this.setEditingProject(false);
         this.projectTitle.textContent = this.currentProject.title;
         this.projectDesc.textContent = this.currentProject.description;
         this.projectTitleInput.value = this.currentProject.title;

@@ -50,6 +50,9 @@ class ProjectsPage extends Page {
             document.getElementById("project-title-input");
         this.projectDescInput = document.getElementById("project-desc-input");
 
+        document.getElementById("project-delete").onclick = () => {
+            this.deleteProject();
+        };
         document.getElementById("project-start-edit").onclick = () => {
             this.setEditingProject(true);
         };
@@ -101,8 +104,8 @@ class ProjectsPage extends Page {
      * Updates the selected project after it got edited. This function
      * validates the new project.
      *
-     * @return true if successfuly edited or the project had no change.
-     *         Otherwise, returns false.
+     * @return true if successfuly requested to edit or the project had no
+     *         change. Otherwise, returns false.
      */
     updateProject() {
         if (!this.projectTitleInput.value) {
@@ -133,6 +136,13 @@ class ProjectsPage extends Page {
     }
 
     /**
+     * Deletes the selected project from the server.
+     */
+    deleteProject() {
+        App.context.todos.deleteProject(this.currentProject.id);
+    }
+
+    /**
      * Selects the given project to display its content.
      *
      * @param project The project to display, or null to display no project.
@@ -141,10 +151,7 @@ class ProjectsPage extends Page {
         if (!project) {
             this.currentProject = null;
             this.setEditingProject(false);
-            this.projectTitle.textContent = "";
-            this.projectDesc.textContent = "";
-            this.projectTitleInput.value = "";
-            this.projectDescInput.value = "";
+            this.projectHeader.classList.add("hidden");
             return;
         }
 

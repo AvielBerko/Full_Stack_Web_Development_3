@@ -95,7 +95,7 @@ class TodosContext {
     }
 
     /**
-     * Updates a give project in the server asynchronously. If the projects
+     * Updates a given project in the server asynchronously. If the projects
      * aren't synced, then they get synced. After the project gets updated, the
      * give callback gets called.
      *
@@ -140,6 +140,41 @@ class TodosContext {
             callback?.(project);
         };
         updateReq.send(JSON.stringify(project));
+    }
+
+    /**
+     * Deletes a given project from the server asynchronously. If the projects
+     * aren't synced, then they get synced. After the project gets updated, the
+     * give callback gets called.
+     *
+     * @param projectId The id of the project to delete.
+     */
+    deleteProject(projectId) {
+        const deleteReq = this.#createRequest("DELETE",
+            `/projects/${projectId}`);
+        deleteReq.onload = () => {
+            if (deleteReq.status !== 200) {
+                console.error(deleteReq);
+                return;
+            }
+
+            // Check if needs to sync the project or only change remove the
+            // deleted project from the cached list.
+            const {oldSync, newSync} =
+                JSON.parse(deleteReq.responseText);
+            if (oldSync !== this._projectsSync) {
+                // Current cached projects are not synced with the server.
+                this.syncProjects(null, true);
+            } else {
+                // Only remove the deleted project instead of sending a new
+                // request to sync the projects.
+                this._projects =  this._projects.filter(
+                    p => p.id !== projectId);
+                this._projectsSync = newSync;
+                this.onUpdatedProjects?.(this._projects);
+            }
+        };
+        deleteReq.send(projectId);
     }
 
     /**

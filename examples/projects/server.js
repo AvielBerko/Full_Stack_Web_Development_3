@@ -48,6 +48,19 @@ class Server {
                 });
                 this.projects.sync = newSync;
             }
+        } else if (request.url.startsWith('/projects/') &&
+                   request.method === 'DELETE') {
+            const id = request.url.substring('/projects/'.length);
+            if (this.projects[id]) {
+                delete this.projects[id];
+            }
+            const newSync = "22bdf7cc-6bb7-4438-8be4-c61e0a6bcdd" + this.count;
+            request.setStatus(200);
+            request.responseText = JSON.stringify({
+                oldSync: this.projects.sync,
+                newSync: newSync,
+            });
+            this.projects.sync = newSync;
         } else {
             request.setStatus(501);
         }

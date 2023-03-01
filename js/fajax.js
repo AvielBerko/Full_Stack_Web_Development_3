@@ -153,7 +153,7 @@ class FXMLHttpRequest extends EventTarget {
         }
 
         this.method = method.toUpperCase();
-        this.url = url.toLowerCase();
+        this.url = url;
         this.body = null;
         this.readyState = 1;
         this.requestHeaders = {};

@@ -173,7 +173,8 @@ class Database {
      * @param item - The new value to assign to the item.
      */
     update(id, item) {
-        this.get(id);
+        const oldItem = this.get(id);
+        item.table = oldItem.table;
         this.storage.setItem(id, item);
     }
 

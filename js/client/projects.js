@@ -64,6 +64,9 @@ class ProjectsPage extends Page {
                 this.setEditingProject(false);
             }
         };
+        document.getElementById("project-new").onclick = () => {
+            this.createNewProject();
+        };
 
         App.context.todos.onUpdatedProjects =
             proj => this.displayProjects(proj);
@@ -140,6 +143,19 @@ class ProjectsPage extends Page {
      */
     deleteProject() {
         App.context.todos.deleteProject(this.currentProject.id);
+    }
+
+    /**
+     * Creates a new project, selects it and start editing it. The project
+     * is already being created in the server with a default title.
+     */
+    createNewProject() {
+        App.context.todos.createNewProject(
+            proj => {
+                this.setCurrentProject(proj);
+                this.setEditingProject(true);
+            }
+        );
     }
 
     /**

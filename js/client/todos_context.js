@@ -97,7 +97,7 @@ class TodosContext {
     /**
      * Updates a given project in the server asynchronously. If the projects
      * aren't synced, then they get synced. After the project gets updated, the
-     * give callback gets called.
+     * given callback gets called.
      *
      * If the project cannot be found, then the onmissing callback gets called.
      *
@@ -144,8 +144,7 @@ class TodosContext {
 
     /**
      * Deletes a given project from the server asynchronously. If the projects
-     * aren't synced, then they get synced. After the project gets updated, the
-     * give callback gets called.
+     * aren't synced, then they get synced.
      *
      * @param projectId The id of the project to delete.
      */
@@ -168,13 +167,54 @@ class TodosContext {
             } else {
                 // Only remove the deleted project instead of sending a new
                 // request to sync the projects.
-                this._projects =  this._projects.filter(
+                this._projects = this._projects.filter(
                     p => p.id !== projectId);
                 this._projectsSync = newSync;
                 this.onUpdatedProjects?.(this._projects);
             }
         };
         deleteReq.send(projectId);
+    }
+
+    /**
+     * Creates a new project with a default title in the server asynchronously.
+     * If the projects aren't synced, then they get synced. After the project
+     * gets created, the given callback gets called.
+     *
+     * @param callback Optional. A function that gets the new project.
+     */
+    createNewProject(callback) {
+        const newProject = {
+            title: "New Project",
+            description: "",
+        };
+        const createReq = this.#createRequest("POST",
+            `/projects/new`);
+        createReq.onload = () => {
+            if (createReq.status !== 201) {
+                console.error(createReq);
+                return;
+            }
+
+            // Gets the id of the new created project. Also, checks if need to
+            // sync the project or only add the new project from the cached
+            // list.
+            const {projectId, oldSync, newSync} =
+                JSON.parse(createReq.responseText);
+            newProject.id = projectId;
+            if (oldSync !== this._projectsSync) {
+                // Current cached projects are not synced with the server.
+                this.syncProjects(null, true);
+            } else {
+                // Only adds the new project instead of sending a new request
+                // to sync the projects.
+                this._projects.push(newProject);
+                this._projectsSync = newSync;
+                this.onUpdatedProjects?.(this._projects);
+            }
+            callback?.(newProject);
+        };
+        createReq.send(JSON.stringify(newProject));
     }
 
     /**

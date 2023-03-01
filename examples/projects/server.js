@@ -61,6 +61,27 @@ class Server {
                 newSync: newSync,
             });
             this.projects.sync = newSync;
+        } else if (request.url === '/projects/new' &&
+                   request.method === 'POST') {
+            const {title, description} = JSON.parse(request.body);
+            if (!title) {
+                request.setStatus(400);
+            } else {
+                const id = "22bdf7cc-6bb7-4438-cccc-c61e0a6bcdf" + this.count;
+                this.projects[id] = {
+                    title: title,
+                    description: description,
+                };
+                const newSync = "22bdf7cc-6bb7-4438-8be4-c61e0a6bedf"
+                    + this.count;
+                request.setStatus(201);
+                request.responseText = JSON.stringify({
+                    projectId: id,
+                    oldSync: this.projects.sync,
+                    newSync: newSync,
+                });
+                this.projects.sync = newSync;
+            }
         } else {
             request.setStatus(501);
         }

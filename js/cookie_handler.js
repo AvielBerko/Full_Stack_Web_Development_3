@@ -24,6 +24,5 @@ function resetCookie(name, value, max_age) {
 }
 
 function removeCookie(name) {
-    document.cookie = `${name}=; ` +
-    `expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    setCookie(name, 0, 0);
 }

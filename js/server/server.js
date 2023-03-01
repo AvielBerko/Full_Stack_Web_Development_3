@@ -58,7 +58,7 @@ class Server {
 
         
         const allUsers = this.db.getTableItems(USERS_TABLE_NAME);
-        const filteredUser = allUsers.filter((user) => (user.username === credentials.username && user.password === credentials.password));
+        const filteredUser = allUsers.filter((user) => (user.obj.username === credentials.username && user.obj.password === credentials.password));
         if (!filteredUser.length) {
             request.setStatus(401);
             return;
@@ -72,30 +72,25 @@ class Server {
     }
 
     #handleLogoutRequest(request) {
-        let apiKey;
         if (request.method != 'POST') {
             request.setStatus(501);
             return;
         }
-        try {
-            apiKey = JSON.parse(request.body)
-        }
-        catch {
+        const apiKey = request.body;
+        if (!apiKey) {
             request.setStatus(401);
             return;
         }
-
         
         const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
-        const filteredClient = allConnectedClients.filter((c) => (c.apiKey === apiKey));
+        const filteredClient = allConnectedClients.filter((c) => (c.uuid === apiKey));
         if (!filteredClient.length) {
             request.setStatus(401);
             request.responseText = "Client's API Key is not registered!"
             return;
         }
         
-        this.db.remove();
-        // this.db.add(credentials, USERS_TABLE_NAME);
+        this.db.remove(apiKey);
         request.setStatus(200);
         request.responseText = apiKey;
     }

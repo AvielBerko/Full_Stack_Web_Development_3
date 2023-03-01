@@ -199,7 +199,7 @@ class FXMLHttpRequest extends EventTarget {
         }
 
         if (this.method !== "GET" && this.method !== "HEAD") {
-            this.body = body.toString();
+            this.body = body?.toString() ?? "";
         }
 
         this.readyState = 2;

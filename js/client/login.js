@@ -26,10 +26,19 @@ class LoginPage extends Page {
     }
 
     enter(...args) {
-        if (!this.logout(args[0])) {
-            this.autoLogin();
+        const logout = args[0];
+        const apiKey = getCookie(APIKEY_COOKIE_NAME);
+        if (logout) {
+            if (!apiKey) {
+                console.error("No user is currently connected")
+            }
+            this.requestLogout(apiKey);
+        }
+        else {
+            this.autoLogin(apiKey);
         }
         super.enter(...args);
+        validatePage();
         const loginForm = document.getElementById('login-form');
 
         loginForm.addEventListener("submit", (ev) => {
@@ -60,10 +69,9 @@ class LoginPage extends Page {
     * Checks if last user wanted to auto login. If they wanted, then it auto
     * logins.
     */
-    autoLogin() {
-        const apiKey = getCookie(APIKEY_COOKIE_NAME);
-
+    autoLogin(apiKey) {
         if (apiKey) {
+            console.log("Auto logged in");
             this.getin(apiKey);
         }
     }
@@ -89,14 +97,14 @@ class LoginPage extends Page {
         const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
 
         if (attempts >= ATTEMPTS_MAX) {
-            console.log("Too many attempts, try again in 10 minutes")
+            console.error("Too many attempts, try again in 10 minutes")
             return;
         }
 
         const request = new FXMLHttpRequest();
 
         request.onload = () => {
-                this.handleLoginResponse(request);
+            this.handleLoginResponse(request);
         };
 
         const requestData = JSON.stringify(credentials);
@@ -111,7 +119,7 @@ class LoginPage extends Page {
 
             this.login(request.responseText);
         } else {
-            console.log("Invalid username or password");
+            console.error("Invalid username or password");
             const username = JSON.parse(request.body)['username']
             const attemptsCookie = username + ATTEMPTS_COOKIE_POSTFIX;
             const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
@@ -157,7 +165,6 @@ class LoginPage extends Page {
     logout() {
         //sessionStorage.removeItem('currentUsername');
         removeCookie(APIKEY_COOKIE_NAME);
-        removeCookie()
         //this.navigate(null);  // Move to main page
         return true;
     }
@@ -185,8 +192,9 @@ class RegisterPage extends Page {
 
     enter(...args) {
         super.enter(...args);
-        const registerForm = document.getElementById('register-form');
+        validatePage();
 
+        const registerForm = document.getElementById('register-form');
         registerForm.addEventListener("submit", (ev) => {
             ev.preventDefault();  // prevent the form from submitting
             this.requsetRegister();
@@ -213,15 +221,15 @@ class RegisterPage extends Page {
 
         if (Object.values(credentials).some((value) => value.trim() === "") || credentials.password != credentials.passwordVal)
             return;
-        
+
 
         const request = new FXMLHttpRequest();
 
         request.onload = () => {
-                this.handleRegisterResponse(request);
+            this.handleRegisterResponse(request);
         };
 
-        const requestData = JSON.stringify((({username, password}) => ({username, password}))(credentials));
+        const requestData = JSON.stringify((({ username, password }) => ({ username, password }))(credentials));
 
         request.open('post', '/register');
         request.send(requestData);
@@ -239,7 +247,7 @@ class RegisterPage extends Page {
 
     login(/*username, */apiKey) {
         if (document.getElementById("chkAutoLogin").checked)
-            setAutoLogin(apiKey);   
+            setAutoLogin(apiKey);
         this.getin(apiKey);
     }
 
@@ -252,21 +260,8 @@ class RegisterPage extends Page {
 
 
 // ################################ VALIDATION ################################
-LoginPage.addEventListener('exit',validatePage());
-RegisterPage.addEventListener('exit',validatePage());
 
 function validatePage() {
-    var input100 = document.querySelectorAll('.input100');
-    input100.forEach(function (input) {
-        input.addEventListener('blur', function () {
-            if (input.value.trim() != "") {
-                input.classList.add('has-val');
-            } else {
-                input.classList.remove('has-val');
-            }
-        })
-    });
-
     var input = document.querySelectorAll('.validate-input .input100');
 
     input.forEach(function (input) {
@@ -275,8 +270,8 @@ function validatePage() {
         });
     });
 
-    var validateForm = document.querySelectorAll('.validate-form');
-    validateForm.forEach(function (form) {
+    var forms = document.querySelectorAll('.validate-form');
+    forms.forEach(function (form) {
         form.addEventListener('submit', function () {
             var check = true;
             for (var i = 0; i < input.length; i++) {

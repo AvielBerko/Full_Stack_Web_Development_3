@@ -50,6 +50,9 @@ class ProjectsPage extends Page {
             document.getElementById("project-title-input");
         this.projectDescInput = document.getElementById("project-desc-input");
 
+        this.tasksList = document.getElementById("tasks-list");
+        this.tasksContainer = document.getElementById("tasks-container");
+
         document.getElementById("project-delete").onclick = () => {
             this.deleteProject();
         };
@@ -68,9 +71,16 @@ class ProjectsPage extends Page {
             this.createNewProject();
         };
 
+        document.getElementById("task-new").onclick = () => {
+            this.createNewTask();
+        }
+
         this.setCurrentProject(null);
         App.context.todos.onUpdatedProjects =
             proj => this.displayProjects(proj);
+        App.context.todos.onUpdatedTasks =
+            (proj, tasks) => console.log("New Tasks", proj, tasks);
+
         App.context.todos.syncProjects();
     }
 
@@ -154,7 +164,7 @@ class ProjectsPage extends Page {
     }
 
     /**
-     * Creates a new project, selects it and start editing it. The project
+     * Creates a new project, selects it and starts editing it. The project
      * is already being created in the server with a default title.
      */
     createNewProject() {
@@ -162,6 +172,18 @@ class ProjectsPage extends Page {
             proj => {
                 this.setCurrentProject(proj);
                 this.setEditingProject(true);
+            }
+        );
+    }
+
+    /**
+     * Creates a new task of the current project and starts editing it.
+     * The task is already being created in the server with a default title.
+     */
+    createNewTask() {
+        App.context.todos.createNewTask(this.currentProject.id,
+            task => {
+                // TODO: Start editing the task.
             }
         );
     }
@@ -175,6 +197,7 @@ class ProjectsPage extends Page {
         if (!project) {
             this.currentProject = null;
             this.projectHeader.classList.add("hidden");
+            this.tasksList.classList.add("hidden");
             return;
         }
 
@@ -183,6 +206,7 @@ class ProjectsPage extends Page {
         this.projectDesc.textContent = this.currentProject.description;
         this.projectTitleInput.value = this.currentProject.title;
         this.projectDescInput.value = this.currentProject.description;
+        this.tasksList.classList.remove("hidden");
     }
 
     /**

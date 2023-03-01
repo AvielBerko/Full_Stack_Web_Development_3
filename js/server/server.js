@@ -56,6 +56,9 @@ class Server {
                 case '/projects':
                     this.#handleProjectsRequest(request);
                     break;
+                case '/tasks':
+                    this.#handleTasksRequest(request);
+                    break;
             }
         }
         catch (ex) {
@@ -228,6 +231,7 @@ class Server {
                 project.title = title.toString();
                 project.description = rest.description?.toString() ?? "";
                 project.creator = userId;
+                project.tasksSync = generateUUID();
             } catch {
                 request.setStatus(400);
                 return;
@@ -272,6 +276,7 @@ class Server {
             try {
                 const oldProject = this.db.get(projectId);
                 updatedProject.creator = oldProject.creator;
+                updatedProject.tasksSync = oldProject.tasksSync;
             } catch {
                 request.setStatus(404);
                 return;
@@ -318,6 +323,87 @@ class Server {
                 oldSync: oldSync,
                 newSync: newSync,
             });
+        } else {
+            request.setStatus(400);
+        }
+    }
+
+    #handleTasksRequest(request) {
+        // Any tasks request must be authorized first.
+        const userId = this.#authorizeUser(request);
+        if (!userId) {
+            return;
+        }
+        const user = this.db.get(userId);
+
+        if (request.method === "GET" && request.url === "/tasks") {
+            // This request asks get a given project's tasks.
+
+            request.setStatus(501);
+        } else if (request.method === "GET" &&
+            request.url === "/tasks/sync") {
+            // This request asks get the sync value of a given project's tasks.
+
+            request.setStatus(501);
+        } else if (request.method === "POST" &&
+            request.url === "/tasks/new") {
+            // This request asks to creates a new task in a given project.
+
+            // Validate that the request has a project id and at least a title.
+            const task = {
+                creator: userId,
+                complete: false,
+            };
+            let project;
+            try {
+                const {parent, title, ...rest} = JSON.parse(request.body)
+                if (!parent || !title) {
+                    request.setStatus(400);
+                    return;
+                }
+                task.parent = parent;
+                task.title = title.toString();
+                task.description = rest.description?.toString() ?? "";
+            } catch {
+                request.setStatus(400);
+                return;
+            }
+
+            // Check that the given project exists.
+            try {
+                project = this.db.get(task.parent);
+            } catch {
+                request.setStatus(404);
+                return;
+            }
+
+            // Creates the new task and the new sync.
+            const taskId = this.db.add(task, TASKS_TABLE_NAME);
+            const oldSync = project.tasksSync;
+            const newSync = generateUUID();
+            project.tasksSync = newSync;
+            this.db.update(task.parent, project);
+
+            request.setStatus(201);
+            request.responseText = JSON.stringify({
+                taskId: taskId,
+                oldSync: oldSync,
+                newSync: newSync,
+            });
+        } else if (request.method === "POST" &&
+            request.url.startsWith("tasks/toggle-complete/")) {
+            // This request asks to toggle a given task's completness state.
+
+            request.setStatus(501);
+        } else if (request.method === "PUT" &&
+            request.url === "/tasks/update") {
+            // This request asks to update a given task's data.
+
+            request.setStatus(501);
+        } else if (request.method === "DELETE") {
+            // This request asks to delete a given task.
+
+            request.setStatus(501);
         } else {
             request.setStatus(400);
         }

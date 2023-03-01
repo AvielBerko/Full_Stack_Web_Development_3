@@ -22,10 +22,12 @@ class TodosContext {
          * to get or update the user's data.
          */
         this.apiKey = apiKey;
+
         /**
          * List containing all the synced projects from the server.
          */
         this._projects = null;
+
         /**
          * The sync string of the projects. If the server has a different sync
          * string, then the projects list needs to be updated.
@@ -33,10 +35,30 @@ class TodosContext {
         this._projectsSync = null;
 
         /**
+         * Object containing lists of all the projects' synced tasks from the
+         * server.
+         */
+        this._tasks = {};
+
+        /**
+         * The sync strings of all the projects' tasks. If the server has a
+         * different sync string, then the project's tasks list needs to be
+         * updated.
+         */
+        this._tasksSync = {};
+
+        /**
          * This callback function gets called with updated projects whenever
          * the projects gets synced with the server.
          */
         this.onUpdatedProjects = null;
+
+        /**
+         * This callback function gets called with a project id and the
+         * project's updated tasks whenever the project's tasks gets synced
+         * with the server.
+         */
+        this.onUpdatedTasks = null;
     }
 
     /**
@@ -188,8 +210,7 @@ class TodosContext {
             title: "New Project",
             description: "",
         };
-        const createReq = this.#createRequest("POST",
-            `/projects/new`);
+        const createReq = this.#createRequest("POST", "/projects/new");
         createReq.onload = () => {
             if (createReq.status !== 201) {
                 console.error(createReq);
@@ -197,8 +218,7 @@ class TodosContext {
             }
 
             // Gets the id of the new created project. Also, checks if need to
-            // sync the project or only add the new project from the cached
-            // list.
+            // sync the project or only add the new project to the cached list.
             const {projectId, oldSync, newSync} =
                 JSON.parse(createReq.responseText);
             newProject.id = projectId;
@@ -215,6 +235,54 @@ class TodosContext {
             callback?.(newProject);
         };
         createReq.send(JSON.stringify(newProject));
+    }
+
+    /**
+     * Creates a new task in a given project with a default title in the server
+     * asynchronously. If the project's tasks aren't synced, then they get
+     * synced. After the task gets created, the given callback gets called.
+     *
+     * @param projectId The id of the project that will get the new task.
+     * @param callback Optional. A function that gets the new task.
+     */
+    createNewTask(projectId, callback) {
+        const newTask = {
+            title: "New Task",
+            description: "",
+            parent: projectId,
+        };
+        const createReq = this.#createRequest("POST", "/tasks/new");
+        createReq.onload = () => {
+            if (createReq.status !== 201) {
+                console.error(createReq);
+                return;
+            }
+
+            // Gets the id of the new created task. Also, checks if need to
+            // sync the project's tasks or only add the new task to the cached
+            // list.
+            const {taskId, oldSync, newSync} =
+                JSON.parse(createReq.responseText);
+            newTask.id = taskId;
+            if (true || oldSync !== this._tasksSync[projectId]) {
+                // Current cached project's tasks are not synced with the
+                // server.
+
+                // this.syncTasks(projectId, null, true);
+                this._tasks[projectId] = [];
+                this._tasks[projectId].push(newTask);
+                this._tasksSync[projectId] = newSync;
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            } else {
+                // Only adds the new task instead of sending a new request
+                // to sync the project's tasks.
+                this._tasks[projectId].push(newTask);
+                this._tasksSync[projectId] = newSync;
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            }
+            callback?.(newTask);
+        };
+        createReq.send(JSON.stringify(newTask));
     }
 
     /**

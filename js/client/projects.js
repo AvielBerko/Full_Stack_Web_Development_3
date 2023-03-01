@@ -81,8 +81,7 @@ class ProjectsPage extends Page {
      * @param projects The projects to display.
      */
     displayProjects(projects) {
-        const lastProjectId = this.currentProject?.id;
-        this.setCurrentProject(projects[0]);
+        let currentProjectExists = false;
 
         this.projectsContainer.innerHTML = '';
         for (const project of projects) {
@@ -96,10 +95,13 @@ class ProjectsPage extends Page {
             }
             this.projectsContainer.append(projElem);
 
-            // Selects the last selected project.
-            if (lastProjectId === project.id) {
-                this.setCurrentProject(project);
+            if (this.currentProject?.id === project.id) {
+                currentProjectExists = true;
             }
+        }
+
+        if (!currentProjectExists) {
+            this.setCurrentProject(projects[0]);
         }
     }
 

@@ -95,7 +95,7 @@ class Server {
     */
     #handleLogoutRequest(request) {
          // Checks that the requset is done by POST HTTP method
-        if (request.method != 'POST') {
+        if (request.method != 'DELETE') {
             request.setStatus(501);
             return;
         }

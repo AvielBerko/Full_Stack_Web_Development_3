@@ -170,7 +170,7 @@ class LoginPage extends Page {
             this.handleLogoutResponse(request);
         };
 
-        request.open('post', '/logout');
+        request.open('delete', '/logout');
         request.send(apiKey);
     }
 

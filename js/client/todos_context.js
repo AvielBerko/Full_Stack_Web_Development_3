@@ -17,48 +17,58 @@ class TodosContext {
      * @param apiKey The user's api key.
      */
     constructor(apiKey) {
-        this._apiKey = apiKey;
+        /**
+         * The authenticated user's api key. Without this key, it's impossible
+         * to get or update the user's data.
+         */
+        this.apiKey = apiKey;
+        /**
+         * List containing all the synced projects from the server.
+         */
+        this._projects = null;
+        /**
+         * The sync string of the projects. If the server has a different sync
+         * string, then the projects list needs to be updated.
+         */
+        this._projectsSync = null;
+
+        /**
+         * This callback function gets called with updated projects whenever
+         * the projects gets synced with the server.
+         */
+        this.onUpdatedProjects = null;
     }
 
     /**
      * Syncs the projects with the server asynchronously. After finished
-     * synching with the server, the given callback will be called with the
-     * updated projects.
+     * synching with the server, the callback onUpdatedProjects and the given
+     * callback will be called with the updated projects.
      *
-     * If an api error occures, the callback onerror will be called with the
-     * server's response.
-     *
-     * @param callback Optional. A Function that gets the projects.
-     * @param onerror  Optional. A Function that gets the server's error
-     *                 response.
+     * @param callback Optional. A function that gets the projects.
+     * @param force    Optional. When true, gets the projects from the server
+     *                 even if already synced.
      */
-    syncProjects(callback, onerror) {
+    syncProjects(callback, force = false) {
         const _getProjects = () => {
             const projectsReq = this.#createRequest("GET", "/projects");
             projectsReq.onload = () => {
                 if (projectsReq.status !== 200) {
-                    onerror?.(projectsReq);
+                    console.error(projectsReq);
                     return;
                 }
 
-                // Saves the projects in this._projects and the sync value in
-                // this._projectsSync.
-                this._projects = {};
                 const response = JSON.parse(projectsReq.responseText);
-                for (const projId in response) {
-                    if (projId === "sync") {
-                        this._projectsSync = response[projId];
-                    } else {
-                        this._projects[projId] = response[projId];
-                    }
-                }
+                this._projects = response.projects;
+                this._projectsSync = response.sync;
+
                 callback?.(this._projects);
+                this.onUpdatedProjects?.(this._projects);
             }
             projectsReq.send();
         };
 
-        // Checks if already have cached projects.
-        if (!this._projectsSync) {
+        // If not forced, checks if already have cached projects.
+        if (force || !this._projectsSync) {
             _getProjects();
             return;
         } 
@@ -67,13 +77,14 @@ class TodosContext {
         const syncReq = this.#createRequest("GET", "/projects/sync");
         syncReq.onload = () => {
             if (syncReq.status !== 200) {
-                onerror?.(projectsReq);
+                console.error(projectsReq);
                 return;
             }
 
             if (this._projectsSync === syncReq.responseText) {
                 // Doesn't need to sync.
                 callback?.(this._projects);
+                this.onUpdatedProjects?.(this._projects);
                 return;
             }
 
@@ -81,6 +92,55 @@ class TodosContext {
             _getProjects();
         };
         syncReq.send();
+    }
+
+    /**
+     * Updates a give project in the server asynchronously. If the projects
+     * aren't synced, then they get synced. After the project gets updated, the
+     * give callback gets called.
+     *
+     * If the project cannot be found, then the onmissing callback gets called.
+     *
+     * @param project The project to update. This object must contain id,
+     *                title and description.
+     * @param callback Optional. A function that gets the updated project.
+     * @param onmissing  Optional. A function that get no arguments.
+     */
+    updateProject(project, callback, onmissing) {
+        const updateReq = this.#createRequest("PUT",
+            `/projects/update/${project.id}`);
+        updateReq.onload = () => {
+            if (updateReq.status === 404) {
+                onmissing?.();
+                return;
+            }
+            if (updateReq.status !== 200) {
+                console.error(updateReq);
+                return;
+            }
+
+            // Check if needs to sync the project or only change the updated
+            // project.
+            const {oldSync, newSync} =
+                JSON.parse(updateReq.responseText);
+            if (oldSync !== this._projectsSync) {
+                // Current cached projects are not synced with the server.
+                this.syncProjects(null, true);
+            } else {
+                // Only updating the current project instead of sending a new
+                // request to sync the projects.
+                for (const p of this._projects) {
+                    if (p.id === project.id) {
+                        p.title = project.title;
+                        p.description = project.description;
+                    }
+                }
+                this._projectsSync = newSync;
+                this.onUpdatedProjects?.(this._projects);
+            }
+            callback?.(project);
+        };
+        updateReq.send(JSON.stringify(project));
     }
 
     /**

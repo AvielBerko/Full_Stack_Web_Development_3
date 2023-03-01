@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+
+    <title>Projects</title>
+
+    <link rel="stylesheet" href="projects.css">
+</head>
+
+<body>
+
+    <main id="spa-target">
+    </main>
+
+    <!-- templates -->
+    <template id="template-projects">
+        <div class="container">
+            <div id="project-header" class="row">
+                <h2 id="project-title"></h2>
+                <p id="project-desc"></p>
+                <button id="project-start-edit">Edit</button>
+            </div>
+            <div id="project-form" class="row hidden">
+                <div>
+                    <label for="project-title-input">Title</label>
+                </div>
+                <div>
+                    <input type="text" id="project-title-input"
+                           name="project-title-input"
+                           placeholder="Type here the project's title">
+                    </input>
+                </div>
+                <div>
+                    <label for="project-desc-input">Description</label>
+                </div>
+                <div>
+                    <textarea id="project-desc-input" name="project-desc-input"
+                           placeholder="Type here the project's description"
+                    ></textarea>
+                </div>
+                <div>
+                    <button id="project-submit-edit">Save</button>
+                    <button id="project-cancel-edit">Cancel</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div id="projects-container">
+                        <!-- Projects List -->
+                    </div>
+                </div>
+                <div class="col-9">
+                    <div id="tasks-container">
+                        <!-- Tasks List -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-project">
+        <div class="project-btn">
+            <p class="project-title"></p>
+        </div>
+    </template>
+    <!-- end templates -->
+
+    <script src="../../js/server/database.js"></script>
+    <script src="server.js"></script>
+    <script src="../../js/fajax.js"></script>
+    <script src="../../js/client/spa.js"></script>
+    <script src="../../js/client/todos_context.js"></script>
+    <script src="../../js/client/projects.js"></script>
+    <script>
+        "use strict";
+        Network.setServer(new Server());
+        App.init("projects", {projects: new ProjectsPage() });
+    </script>
+</body>
+
+</html>

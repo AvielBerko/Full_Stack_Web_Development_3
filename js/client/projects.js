@@ -21,6 +21,11 @@ class ProjectsPage extends Page {
             throw new Error("Missing a project template");
         }
 
+        this.taskTemplate = document.getElementById("template-task");
+        if (!this.taskTemplate) {
+            throw new Error("Missing a task template");
+        }
+
         this.currentProject = null;
         this.editingProject = false;
     }
@@ -79,7 +84,7 @@ class ProjectsPage extends Page {
         App.context.todos.onUpdatedProjects =
             proj => this.displayProjects(proj);
         App.context.todos.onUpdatedTasks =
-            (proj, tasks) => console.log("New Tasks", proj, tasks);
+            (proj, tasks) => this.displayTasks(proj, tasks);
 
         App.context.todos.syncProjects();
     }
@@ -175,6 +180,36 @@ class ProjectsPage extends Page {
             }
         );
     }
+
+    /**
+     * Updates the html tasks list to display the given tasks if the given
+     * project is the selected project.
+     *
+     * @param projectId The tasks' project.
+     * @param tasks The tasks to display.
+     */
+    displayTasks(projectId, tasks) {
+        if (this.currentProject?.id !== projectId) {
+            return;
+        }
+
+        this.tasksContainer.innerHTML = '';
+        for (const task of tasks) {
+            // Creates a new task item in the list from the task template.
+            const taskElem = this.taskTemplate.content.cloneNode(true);
+            taskElem.querySelector(".task-title").textContent = task.title;
+            taskElem.querySelector(".task-desc-short").textContent
+                = task.description + "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+            taskElem.querySelector(".task-expand-btn").onclick = ev => {
+                // TODO: Expand the task.
+            }
+            taskElem.querySelector(".task-complete").onclick = ev => {
+                App.context.todos.completeTask(task.parent, task.id);
+            }
+            this.tasksContainer.append(taskElem);
+        }
+    }
+
 
     /**
      * Creates a new task of the current project and starts editing it.

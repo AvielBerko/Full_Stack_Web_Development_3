@@ -2,3 +2,9 @@
 .hidden {
     display: none;
 }
+
+.task-desc-short {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

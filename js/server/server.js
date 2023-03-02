@@ -390,11 +390,41 @@ class Server {
                 oldSync: oldSync,
                 newSync: newSync,
             });
-        } else if (request.method === "POST" &&
-            request.url.startsWith("tasks/toggle-complete/")) {
-            // This request asks to toggle a given task's completness state.
+        } else if (request.method === "PUT" &&
+            request.url.startsWith("/tasks/complete/")) {
+            // This request asks to complete a given task. The given task id
+            // can be found in the url.
 
-            request.setStatus(501);
+            const taskId = request.url.substring('/tasks/complete/'.length);
+            let projectId;
+
+            // Completes the task if the task exists and authorized.
+            try {
+                const task = this.db.get(taskId);
+                if (task.creator !== userId) {
+                    request.setStatus(403);
+                    return;
+                }
+                task.complete = true;
+                this.db.update(taskId, task);
+                projectId = task.parent;
+            } catch {
+                request.setStatus(404);
+                return;
+            }
+
+            // Update the task's project sync.
+            const project = this.db.get(projectId);
+            const oldSync = project.tasksSync;
+            const newSync = generateUUID();
+            project.tasksSync = newSync;
+            this.db.update(projectId, project);
+
+            request.setStatus(200);
+            request.responseText = JSON.stringify({
+                oldSync: oldSync,
+                newSync: newSync,
+            });
         } else if (request.method === "PUT" &&
             request.url === "/tasks/update") {
             // This request asks to update a given task's data.

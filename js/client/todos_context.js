@@ -195,7 +195,7 @@ class TodosContext {
                 this.onUpdatedProjects?.(this._projects);
             }
         };
-        deleteReq.send(projectId);
+        deleteReq.send();
     }
 
     /**
@@ -269,7 +269,7 @@ class TodosContext {
                 // server.
 
                 // this.syncTasks(projectId, null, true);
-                this._tasks[projectId] = [];
+                if (!this._tasks[projectId])this._tasks[projectId] = [];
                 this._tasks[projectId].push(newTask);
                 this._tasksSync[projectId] = newSync;
                 this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
@@ -283,6 +283,45 @@ class TodosContext {
             callback?.(newTask);
         };
         createReq.send(JSON.stringify(newTask));
+    }
+
+    /**
+     * Completes a given task in the server asynchronously. If the tasks of the
+     * given task's project aren't synced, then they get synced.
+
+     *
+     * @param projectId The task's parent.
+     * @param taskId The task to complete.
+     * @param callback Optional. A function that gets called after the task is
+     *                 completed.
+     */
+    completeTask(projectId, taskId, callback) {
+        const completeReq = this.#createRequest("PUT",
+            `/tasks/complete/${taskId}`);
+        completeReq.onload = () => {
+            if (completeReq.status !== 200) {
+                console.error(completeReq);
+                return;
+            }
+
+            // Check if needs to sync the tasks or only change remove the
+            // completed task from the cached list.
+            const {oldSync, newSync} =
+                JSON.parse(completeReq.responseText);
+            if (oldSync !== this._tasksSync[projectId]) {
+                // Current cached tasks are not synced with the server.
+
+                // this.syncTasks(projectId, null, true);
+            } else {
+                // Only remove the completed task instead of sending a new
+                // request to sync the tasks.
+                this._tasks[projectId] = this._tasks[projectId].filter(
+                    t => t.id !== taskId);
+                this._tasksSync[projectId] = newSync;
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            }
+        };
+        completeReq.send();
     }
 
     /**

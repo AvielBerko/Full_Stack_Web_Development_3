@@ -368,7 +368,7 @@ class Server {
 
             // Creates the tasks list to send in the response.
             const tasks = this.db.getTableItems(TASKS_TABLE_NAME).filter(
-                task => task.obj.parent === projectId
+                task => task.obj.parent === projectId && !task.obj.complete
             ).map(({uuid, obj}) => ({
                 id: uuid,
                 title: obj.title,

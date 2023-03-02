@@ -17,7 +17,7 @@ class Server {
             CONNECTED_CLIENTS_TABLE_NAME,
         ]);
     }
-    
+
     /**
      * Initializes the server's database with the given tables (adds the tables that does not
      * already exist)
@@ -28,7 +28,7 @@ class Server {
             try {
                 this.db.addTable(table);
             }
-            catch {}
+            catch { }
         }
     }
 
@@ -43,9 +43,12 @@ class Server {
 
         try {
             const requestType = this.#getRequestType(request.url);
-            switch (requestType)  {
+            switch (requestType) {
                 case '/login':
                     this.#handleLoginRequest(request);
+                    break;
+                case '/autologin':
+                    this.#handleAutoLoginRequest(request);
                     break;
                 case '/logout':
                     this.#handleLogoutRequest(request);
@@ -65,7 +68,7 @@ class Server {
             console.error(ex);
             request.setStatus(500);
         }
-        
+
     }
 
     /**
@@ -93,18 +96,45 @@ class Server {
         // Gets all users and filters the user with the given username and password
         const allUsers = this.db.getTableItems(USERS_TABLE_NAME);
         const filteredUser = allUsers.filter((user) =>
-            (user.obj.username === credentials.username &&
-             user.obj.password === credentials.password));
+        (user.obj.username === credentials.username &&
+            user.obj.password === credentials.password));
         // If no such user was found
         if (!filteredUser.length) {
             request.setStatus(401);
             return;
         }
-        
+
         // The login was successful 
         const apiKey = this.#connectClient(filteredUser[0].uuid);
         request.setStatus(200);
         request.responseText = apiKey;
+    }
+
+    /**
+    * Hendles a client's autologin request.
+    * @param request - The FAJAX request the client has sent.
+    */
+    #handleAutoLoginRequest(request) {
+        // Checks that the requset is done by POST HTTP method
+        if (request.method != 'POST') {
+            request.setStatus(501);
+            return;
+        }
+        const apiKey = request.body;
+        if (!apiKey) {
+            request.setStatus(401);
+            return;
+        }
+
+        // If no such user was found
+        if (!this.#validateConnection(apiKey)) {
+            request.setStatus(401);
+            request.responseText = "API Key is invalid";
+            return;
+        }
+
+        // The auto-login was successful 
+        request.setStatus(200);
     }
 
     /**
@@ -113,7 +143,7 @@ class Server {
     * @param request - The FAJAX request the client has sent.
     */
     #handleLogoutRequest(request) {
-         // Checks that the requset is done by POST HTTP method
+        // Checks that the requset is done by POST HTTP method
         if (request.method != 'DELETE') {
             request.setStatus(501);
             return;
@@ -123,19 +153,15 @@ class Server {
             request.setStatus(401);
             return;
         }
-        
-        // Gets all connectedClients and filters the apiKey given from the client
-        const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
-        const filteredClient = allConnectedClients.filter((c) => (c.uuid === apiKey));
 
         // If no such apiKey was found
-        if (!filteredClient.length) {
+        if (!this.#validateConnection(apiKey)) {
             request.setStatus(401);
             request.responseText = "Client's API Key is not registered!"
             return;
         }
 
-         // The logout was successful 
+        // The logout was successful 
         this.db.remove(apiKey);
         request.setStatus(200);
     }
@@ -173,7 +199,7 @@ class Server {
             request.responseText = "Username is taken";
             return;
         }
-        
+
         // The registration was successful.
         newUser.projectsSync = generateUUID();
         const userId = this.db.add(newUser, USERS_TABLE_NAME);
@@ -184,10 +210,19 @@ class Server {
 
     #connectClient(userId) {
         const apiKey = generateUUID();
-        this.db.add({userId: userId}, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
+        const expires = new Date();
+        expires.setDate(expires.getDate() + API_KEY_DAYS);
+        this.db.add({ userId: userId, expires: expires }, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
         return apiKey;
     }
 
+    // #checkClientConnected(apiKey) {
+    //     // Gets all connectedClients and filters the apiKey given from the client
+    //     const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
+    //     const filteredClient = allConnectedClients.filter((c) => (c.uuid === apiKey));
+    //     return filteredClient.length
+    // }
+    
     #handleProjectsRequest(request) {
         // Any projects request must be authorized first.
         const userId = this.#authorizeUser(request);
@@ -201,7 +236,7 @@ class Server {
             // projects sync to send in the response.
             const projects = this.db.getTableItems(PROJECTS_TABLE_NAME).filter(
                 proj => proj.obj.creator === userId
-            ).map(({uuid, obj}) => ({
+            ).map(({ uuid, obj }) => ({
                 id: uuid,
                 title: obj.title,
                 description: obj.description,
@@ -223,7 +258,7 @@ class Server {
             // Validate that the request has at least a title.
             const project = {};
             try {
-                const {title, ...rest} = JSON.parse(request.body)
+                const { title, ...rest } = JSON.parse(request.body)
                 if (!title) {
                     request.setStatus(400);
                     return;
@@ -257,7 +292,7 @@ class Server {
             let projectId;
             const updatedProject = {};
             try {
-                const {id, title, ...rest} = JSON.parse(request.body)
+                const { id, title, ...rest } = JSON.parse(request.body)
                 if (!id || !title) {
                     request.setStatus(400);
                     return;
@@ -369,7 +404,7 @@ class Server {
             // Creates the tasks list to send in the response.
             const tasks = this.db.getTableItems(TASKS_TABLE_NAME).filter(
                 task => task.obj.parent === projectId && !task.obj.complete
-            ).map(({uuid, obj}) => ({
+            ).map(({ uuid, obj }) => ({
                 id: uuid,
                 title: obj.title,
                 description: obj.description,
@@ -416,7 +451,7 @@ class Server {
             };
             let project;
             try {
-                const {parent, title, ...rest} = JSON.parse(request.body)
+                const { parent, title, ...rest } = JSON.parse(request.body)
                 if (!parent || !title) {
                     request.setStatus(400);
                     return;
@@ -494,7 +529,7 @@ class Server {
             let taskId;
             const updatedTask = {};
             try {
-                const {id, title, ...rest} = JSON.parse(request.body)
+                const { id, title, ...rest } = JSON.parse(request.body)
                 if (!id || !title) {
                     request.setStatus(400);
                     return;
@@ -579,7 +614,7 @@ class Server {
     #getRequestType(url) {
         let endRequest = url.indexOf('/', 1);
         if (endRequest < 0) endRequest = url.indexOf('?');
-        return url.substring(0, endRequest >= 0 ? endRequest : url.length); 
+        return url.substring(0, endRequest >= 0 ? endRequest : url.length);
     }
 
     /**
@@ -601,11 +636,27 @@ class Server {
             request.setStatus(400);
             return null;
         }
-        try {
-            return this.db.get(apiKey).userId;
-        } catch {
+        const userId = this.#validateConnection(apiKey);
+        if (!userId) {
             request.setStatus(401);
             return null;
         }
+        return userId;
+    }
+
+    #validateConnection(apiKey) {
+        let connectionDetails;
+        try {
+            connectionDetails = this.db.get(apiKey);
+        }
+        catch {
+            return null;
+        }
+        if (Date.parse(connectionDetails.expires) < Date.now()) {
+            this.db.remove(apiKey)
+            //throw new Error("Connection expired");
+            return null;
+        }
+        return connectionDetails.userId;
     }
 }

@@ -59,6 +59,11 @@ class TodosContext {
          * with the server.
          */
         this.onUpdatedTasks = null;
+
+        /**
+         * This callback function gets called when the user is not autorized.
+         */
+        this.onUnauthorized = null;
     }
 
     /**
@@ -74,7 +79,7 @@ class TodosContext {
         const _getProjects = () => {
             const projectsReq = this.#createRequest("GET", "/projects");
             projectsReq.onload = () => {
-                if (projectsReq.status !== 200) {
+                if (!this.#responseStatusValid(projectsReq, 200)) {
                     console.error(projectsReq);
                     return;
                 }
@@ -98,7 +103,7 @@ class TodosContext {
         // Already have cached projects, therefore, checks if needs to sync.
         const syncReq = this.#createRequest("GET", "/projects/sync");
         syncReq.onload = () => {
-            if (syncReq.status !== 200) {
+            if (!this.#responseStatusValid(syncReq, 200)) {
                 console.error(syncReq);
                 return;
             }
@@ -135,7 +140,7 @@ class TodosContext {
                 onmissing?.();
                 return;
             }
-            if (updateReq.status !== 200) {
+            if (!this.#responseStatusValid(updateReq, 200)) {
                 console.error(updateReq);
                 return;
             }
@@ -174,7 +179,7 @@ class TodosContext {
         const deleteReq = this.#createRequest("DELETE",
             `/projects/${projectId}`);
         deleteReq.onload = () => {
-            if (deleteReq.status !== 200) {
+            if (!this.#responseStatusValid(deleteReq, 200)) {
                 console.error(deleteReq);
                 return;
             }
@@ -212,7 +217,7 @@ class TodosContext {
         };
         const createReq = this.#createRequest("POST", "/projects/new");
         createReq.onload = () => {
-            if (createReq.status !== 201) {
+            if (!this.#responseStatusValid(createReq, 201)) {
                 console.error(createReq);
                 return;
             }
@@ -253,7 +258,7 @@ class TodosContext {
             const tasksReq = this.#createRequest("GET",
                 `/tasks?parent=${projectId}`);
             tasksReq.onload = () => {
-                if (tasksReq.status !== 200) {
+                if (!this.#responseStatusValid(tasksReq, 200)) {
                     console.error(tasksReq);
                     return;
                 }
@@ -278,7 +283,7 @@ class TodosContext {
         const syncReq = this.#createRequest("GET",
             `/tasks/sync?parent=${projectId}`);
         syncReq.onload = () => {
-            if (syncReq.status !== 200) {
+            if (!this.#responseStatusValid(syncReq, 200)) {
                 console.error(syncReq);
                 return;
             }
@@ -312,7 +317,7 @@ class TodosContext {
         };
         const createReq = this.#createRequest("POST", "/tasks/new");
         createReq.onload = () => {
-            if (createReq.status !== 201) {
+            if (!this.#responseStatusValid(createReq, 201)) {
                 console.error(createReq);
                 return;
             }
@@ -359,7 +364,7 @@ class TodosContext {
                 onmissing?.();
                 return;
             }
-            if (updateReq.status !== 200) {
+            if (!this.#responseStatusValid(updateReq, 200)) {
                 console.error(updateReq);
                 return;
             }
@@ -403,7 +408,7 @@ class TodosContext {
         const completeReq = this.#createRequest("PUT",
             `/tasks/complete/${taskId}`);
         completeReq.onload = () => {
-            if (completeReq.status !== 200) {
+            if (!this.#responseStatusValid(completeReq, 200)) {
                 console.error(completeReq);
                 return;
             }
@@ -441,7 +446,7 @@ class TodosContext {
         const deleteReq = this.#createRequest("DELETE",
             `/tasks/${taskId}`);
         deleteReq.onload = () => {
-            if (deleteReq.status !== 200) {
+            if (!this.#responseStatusValid(deleteReq, 200)) {
                 console.error(deleteReq);
                 return;
             }
@@ -478,5 +483,15 @@ class TodosContext {
         fxhr.open(method, url);
         fxhr.setRequestHeader("Authorization", "ApiKey " + this.apiKey);
         return fxhr;
+    }
+
+    #responseStatusValid(response, expected) {
+        if (response.status !== expected) {
+            if (response.status === 401) {
+                this.onUnauthorized();
+            }
+            return false
+        }
+        return true;
     }
 }

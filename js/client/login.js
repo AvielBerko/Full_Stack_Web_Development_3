@@ -9,7 +9,7 @@ to block attackers.
 /* Name of the apiKey cookie. */
 const APIKEY_COOKIE_NAME = 'apiKey';
 /* Number of days until expiration of the auto login cookie. */
-const LOGIN_COOKIE_DAYS = 20;
+const API_KEY_DAYS = 20;
 /* Postfix of cookies that track the number of attempted logins. */
 const ATTEMPTS_COOKIE_POSTFIX = "_attempts";
 /* Number of attempts to login allowed before getting blocked. */
@@ -26,8 +26,7 @@ class LoginPage extends Page {
         super('login');
     }
 
-    enter(...args) {
-        const logout = args[0];
+    enter(logout, forceNoAutologin, ...args) {
         const apiKey = getCookie(APIKEY_COOKIE_NAME);
         if (logout) {
             if (!apiKey) {
@@ -37,7 +36,7 @@ class LoginPage extends Page {
             this.requestLogout(apiKey);
         }
         else {
-            if (this.autoLogin(apiKey))
+            if (!forceNoAutologin && this.autoLogin(apiKey))
                 return;
         }
         super.enter(...args);
@@ -60,12 +59,12 @@ class LoginPage extends Page {
     onNav(ev) {
         switch (ev.target.id) {
             case "forgot-password":
-                //return "notImplemented";
-                return "login"
-            case "register":
             case "register-fb":
             case "register-tw":
             case "register-gg":
+                //return "notImplemented";
+                return "login"
+            case "register":
                 return "register";
         }
     }
@@ -76,8 +75,10 @@ class LoginPage extends Page {
     */
     autoLogin(apiKey) {
         if (apiKey) {
-            console.log("Auto logged in");
-            return this.getin(apiKey);
+            this.requsetAutoLogin(apiKey);
+        }
+        else {
+            console.log("No Auto Login");
         }
     }
 
@@ -86,7 +87,7 @@ class LoginPage extends Page {
     */
     getin(/*username,*/ apiKey) {
         // sessionStorage.currentUsername = username;
-        this.navigate(null, apiKey);  // Move to main page
+        this.navigate('projects', apiKey);  // Move to projects page
         return true;
     }
 
@@ -142,10 +143,43 @@ class LoginPage extends Page {
             const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
             if (attempts <= ATTEMPTS_MAX) {
                 // Updates the the number of attempts in the attempts cookie.
-                const expires = new Date();
-                expires.setMinutes(expires.getMinutes() + ATTEMPTS_MINUTES);
-                setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, expires);
+                setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, 60* ATTEMPTS_MINUTES);
             }
+        }
+    }
+
+    /**
+     * Sends a login FAJAX request to the server if the form was filled correctly and
+     * the user is not blocked by 'Too many attampts'.
+     */
+    requsetAutoLogin(apiKey) {
+
+        const request = new FXMLHttpRequest();
+
+        request.onload = () => {
+            this.handleAutoLoginResponse(request);
+        };
+
+        const requestData = apiKey
+
+        request.open('post', '/autologin');
+        request.send(requestData);
+    }
+
+    /**
+     * Handles the FAJAX respnse from the server.
+     * Logges the user in if the credentials were correct, increases the number of
+     * wrong attempts if they weren't.
+     * @param request - The FAJAX object with the response details.
+     */
+    handleAutoLoginResponse(request) {
+        if (request.status === 200) {
+            alert("Auto logged in");
+            this.getin(request.body);
+        } else {
+            // console.error("Invalid username or password");
+            alert(`Auto login failed - ${request.responseText}`)
+            //alert("Auto login failed due to wrong API Key");
         }
     }
 
@@ -225,7 +259,15 @@ class RegisterPage extends Page {
     }
 
     onNav(ev) {
-        return "login";
+        switch (ev.target.id) {
+            case "register-fb":
+            case "register-tw":
+            case "register-gg":
+                //return "notImplemented";
+                return "register"
+            case "login":
+                return "login";
+        }
     }
 
     /**
@@ -277,8 +319,9 @@ class RegisterPage extends Page {
     * @param apiKey - The uniqe apiKey received by the server to the loggen in user.
     */
     login(/*username, */apiKey) {
-        if (document.getElementById("chkAutoLogin").checked)
+        if (document.getElementById("chkAutoLogin").checked) {
             setAutoLogin(apiKey);
+        }
         this.getin(apiKey);
     }
 
@@ -287,7 +330,7 @@ class RegisterPage extends Page {
     */
     getin(/*username,*/ apiKey) {
         // sessionStorage.currentUsername = username;
-        this.navigate('empty', apiKey);  // Move to main page
+        this.navigate('projects', apiKey);  // Move to main page
     }
 
 }

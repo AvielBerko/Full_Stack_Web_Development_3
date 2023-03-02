@@ -53,12 +53,12 @@
 }
 
 #projects-list {
-    flex: 1;
+    width: 25%;
     padding-right: 15px;
 }
 
 #tasks-list {
-    flex: 3;
+    width: 75%;
 }
 
 .delete-btn, .cancel-btn {
@@ -132,7 +132,7 @@
 
 .task-expand-btn {
     cursor: pointer;
-    padding: 5px;
+    padding: 10px;
     transition: all 100ms;
 }
 
@@ -151,10 +151,15 @@
     height: 20px;
     margin-right: 10px;
     transition: all 100ms;
+    flex-shrink: 0;
 }
 
 .task-complete:hover {
     background-color: #c034f7;
+}
+
+.task-title-desc {
+    max-width: 95%;
 }
 
 .task-desc-short {

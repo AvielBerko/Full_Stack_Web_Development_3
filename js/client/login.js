@@ -9,7 +9,7 @@ to block attackers.
 /* Name of the apiKey cookie. */
 const APIKEY_COOKIE_NAME = 'apiKey';
 /* Number of days until expiration of the auto login cookie. */
-const LOGIN_COOKIE_DAYS = 20;
+const API_KEY_DAYS = 20;
 /* Postfix of cookies that track the number of attempted logins. */
 const ATTEMPTS_COOKIE_POSTFIX = "_attempts";
 /* Number of attempts to login allowed before getting blocked. */
@@ -26,7 +26,7 @@ class LoginPage extends Page {
         super('login');
     }
 
-    enter(logout, ...args) {
+    enter(logout, forceNoAutologin, ...args) {
         const apiKey = getCookie(APIKEY_COOKIE_NAME);
         if (logout) {
             if (!apiKey) {
@@ -36,7 +36,7 @@ class LoginPage extends Page {
             this.requestLogout(apiKey);
         }
         else {
-            if (this.autoLogin(apiKey))
+            if (!forceNoAutologin && this.autoLogin(apiKey))
                 return;
         }
         super.enter(...args);
@@ -59,12 +59,12 @@ class LoginPage extends Page {
     onNav(ev) {
         switch (ev.target.id) {
             case "forgot-password":
-                //return "notImplemented";
-                return "login"
-            case "register":
             case "register-fb":
             case "register-tw":
             case "register-gg":
+                //return "notImplemented";
+                return "login"
+            case "register":
                 return "register";
         }
     }
@@ -143,9 +143,7 @@ class LoginPage extends Page {
             const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
             if (attempts <= ATTEMPTS_MAX) {
                 // Updates the the number of attempts in the attempts cookie.
-                const expires = new Date();
-                expires.setMinutes(expires.getMinutes() + ATTEMPTS_MINUTES);
-                setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, expires);
+                setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, 60* ATTEMPTS_MINUTES);
             }
         }
     }
@@ -261,7 +259,15 @@ class RegisterPage extends Page {
     }
 
     onNav(ev) {
-        return "login";
+        switch (ev.target.id) {
+            case "register-fb":
+            case "register-tw":
+            case "register-gg":
+                //return "notImplemented";
+                return "register"
+            case "login":
+                return "login";
+        }
     }
 
     /**
@@ -313,8 +319,9 @@ class RegisterPage extends Page {
     * @param apiKey - The uniqe apiKey received by the server to the loggen in user.
     */
     login(/*username, */apiKey) {
-        if (document.getElementById("chkAutoLogin").checked)
+        if (document.getElementById("chkAutoLogin").checked) {
             setAutoLogin(apiKey);
+        }
         this.getin(apiKey);
     }
 

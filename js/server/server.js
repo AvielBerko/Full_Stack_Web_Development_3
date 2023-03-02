@@ -127,7 +127,7 @@ class Server {
         }
 
         // If no such user was found
-        if (!this.#checkClientConnected(apiKey)) {
+        if (!this.#validateConnection(apiKey)) {
             request.setStatus(401);
             request.responseText = "API Key is invalid";
             return;
@@ -155,7 +155,7 @@ class Server {
         }
 
         // If no such apiKey was found
-        if (!this.#checkClientConnected(apiKey)) {
+        if (!this.#validateConnection(apiKey)) {
             request.setStatus(401);
             request.responseText = "Client's API Key is not registered!"
             return;
@@ -210,16 +210,19 @@ class Server {
 
     #connectClient(userId) {
         const apiKey = generateUUID();
-        this.db.add({ userId: userId }, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
+        const expires = new Date();
+        expires.setDate(expires.getDate() + API_KEY_DAYS);
+        this.db.add({ userId: userId, expires: expires }, CONNECTED_CLIENTS_TABLE_NAME, apiKey);
         return apiKey;
     }
 
-    #checkClientConnected(apiKey) {
-        // Gets all connectedClients and filters the apiKey given from the client
-        const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
-        const filteredClient = allConnectedClients.filter((c) => (c.uuid === apiKey));
-        return filteredClient.length
-    }
+    // #checkClientConnected(apiKey) {
+    //     // Gets all connectedClients and filters the apiKey given from the client
+    //     const allConnectedClients = this.db.getTableItems(CONNECTED_CLIENTS_TABLE_NAME);
+    //     const filteredClient = allConnectedClients.filter((c) => (c.uuid === apiKey));
+    //     return filteredClient.length
+    // }
+    
     #handleProjectsRequest(request) {
         // Any projects request must be authorized first.
         const userId = this.#authorizeUser(request);
@@ -633,11 +636,27 @@ class Server {
             request.setStatus(400);
             return null;
         }
-        try {
-            return this.db.get(apiKey).userId;
-        } catch {
+        const userId = this.#validateConnection(apiKey);
+        if (!userId) {
             request.setStatus(401);
             return null;
         }
+        return userId;
+    }
+
+    #validateConnection(apiKey) {
+        let connectionDetails;
+        try {
+            connectionDetails = this.db.get(apiKey);
+        }
+        catch {
+            return null;
+        }
+        if (Date.parse(connectionDetails.expires) < Date.now()) {
+            this.db.remove(apiKey)
+            //throw new Error("Connection expired");
+            return null;
+        }
+        return connectionDetails.userId;
     }
 }

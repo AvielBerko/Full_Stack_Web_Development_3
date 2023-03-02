@@ -85,6 +85,8 @@ class ProjectsPage extends Page {
             proj => this.displayProjects(proj);
         App.context.todos.onUpdatedTasks =
             (proj, tasks) => this.displayTasks(proj, tasks);
+        App.context.todos.onUnauthorized = 
+            () => {alert("Autoraization Expired, please login"); this.navigate("login", false, true) };
 
         App.context.todos.syncProjects();
     }

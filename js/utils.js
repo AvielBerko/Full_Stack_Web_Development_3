@@ -19,7 +19,6 @@ function generateUUID() {
     * username in cookies, so next time the website will auto login.
  */
 function setAutoLogin(apiKey) {
-    const expires = new Date();
-    expires.setDate(expires.getDate() + LOGIN_COOKIE_DAYS);
-    setCookie(APIKEY_COOKIE_NAME, apiKey, expires);
+    const maxAge = Math.floor(60 * 60 * 24 * API_KEY_DAYS);
+    setCookie(APIKEY_COOKIE_NAME, apiKey, maxAge);
 }

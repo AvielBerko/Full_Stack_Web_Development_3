@@ -57,10 +57,10 @@
                     <button id="project-new">New Project</button>
                 </div>
                 <div id="tasks-list" class="col-9">
+                    <button id="task-new">New Task</button>
                     <div id="tasks-container">
                         <!-- Tasks List -->
                     </div>
-                    <button id="task-new">New Task</button>
                 </div>
             </div>
         </div>
@@ -73,14 +73,16 @@
     </template>
 
     <template id="template-task">
-        <div class="task-header task-expand-btn">
-            <button class="task-complete">Complete</button>
-            <p class="task-title"></p>
-            <p class="task-desc-short"></p>
-            <div class="task-expand hidden">
-                <p class="task-desc-long"></p>
-                <button class="task-start-edit">Edit</button>
-                <button class="task-delete">Delete</button>
+        <div class="task">
+            <div class="task-header task-expand-btn">
+                <button class="task-complete">Complete</button>
+                <p class="task-title"></p>
+                <p class="task-desc-short"></p>
+                <div class="task-expand hidden">
+                    <p class="task-desc-long"></p>
+                    <button class="task-start-edit">Edit</button>
+                    <button class="task-delete">Delete</button>
+                </div>
             </div>
         </div>
     </template>

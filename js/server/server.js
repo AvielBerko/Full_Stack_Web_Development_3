@@ -491,9 +491,38 @@ class Server {
 
             request.setStatus(501);
         } else if (request.method === "DELETE") {
-            // This request asks to delete a given task.
+            // This request asks to delete a given task. The given task id can
+            // be found in the url.
 
-            request.setStatus(501);
+            const taskId = request.url.substring('/tasks/'.length);
+            let projectId;
+
+            // Deletes the task if the task exists and authorized.
+            try {
+                const task = this.db.get(taskId);
+                if (task.creator !== userId) {
+                    request.setStatus(403);
+                    return;
+                }
+                this.db.remove(taskId);
+                projectId = task.parent;
+            } catch {
+                // Ignore missing task when trying to delete because who cares
+                // that the task doesn't exist?
+            }
+
+            // Update the task's project sync.
+            const project = this.db.get(projectId);
+            const oldSync = project.tasksSync;
+            const newSync = generateUUID();
+            project.tasksSync = newSync;
+            this.db.update(projectId, project);
+
+            request.setStatus(200);
+            request.responseText = JSON.stringify({
+                oldSync: oldSync,
+                newSync: newSync,
+            });
         } else {
             request.setStatus(400);
         }

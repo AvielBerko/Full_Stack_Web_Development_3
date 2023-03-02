@@ -197,14 +197,31 @@ class ProjectsPage extends Page {
         for (const task of tasks) {
             // Creates a new task item in the list from the task template.
             const taskElem = this.taskTemplate.content.cloneNode(true);
+            taskElem.querySelector(".task").id = "task-" + task.id;
             taskElem.querySelector(".task-title").textContent = task.title;
-            taskElem.querySelector(".task-desc-short").textContent
-                = task.description + "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+            // When clicking on the task, toggle expansion of the task.
+            const taskExpand = taskElem.querySelector(".task-expand");
+            const shortDesc = taskElem.querySelector(".task-desc-short");
+            shortDesc.textContent = task.description + "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+            taskElem.querySelector(".task-desc-long").textContent =
+                shortDesc.textContent;
             taskElem.querySelector(".task-expand-btn").onclick = ev => {
-                // TODO: Expand the task.
+                task.expanded = !task.expanded;
+                if (task.expanded) {
+                    shortDesc.classList.add("hidden");
+                    taskExpand.classList.remove("hidden");
+                } else {
+                    shortDesc.classList.remove("hidden");
+                    taskExpand.classList.add("hidden");
+                }
             }
+
             taskElem.querySelector(".task-complete").onclick = ev => {
                 App.context.todos.completeTask(task.parent, task.id);
+            }
+            taskElem.querySelector(".task-delete").onclick = ev => {
+                App.context.todos.deleteTask(task.parent, task.id);
             }
             this.tasksContainer.append(taskElem);
         }

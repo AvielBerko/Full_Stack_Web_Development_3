@@ -179,8 +179,8 @@ class TodosContext {
                 return;
             }
 
-            // Check if needs to sync the project or only change remove the
-            // deleted project from the cached list.
+            // Check if needs to sync the project or only remove the deleted
+            // project from the cached list.
             const {oldSync, newSync} =
                 JSON.parse(deleteReq.responseText);
             if (oldSync !== this._projectsSync) {
@@ -358,8 +358,8 @@ class TodosContext {
                 return;
             }
 
-            // Check if needs to sync the tasks or only change remove the
-            // completed task from the cached list.
+            // Check if needs to sync the tasks or only remove the completed
+            // task from the cached list.
             const {oldSync, newSync} =
                 JSON.parse(completeReq.responseText);
             if (oldSync !== this._tasksSync[projectId]) {
@@ -375,6 +375,44 @@ class TodosContext {
             }
         };
         completeReq.send();
+    }
+
+    /**
+     * Deletes a given task from the server asynchronously. If the tasks of the
+     * given task's project aren't synced, then they get synced.
+
+     *
+     * @param projectId The task's parent.
+     * @param taskId The task to delete.
+     * @param callback Optional. A function that gets called after the task is
+     *                 deleted.
+     */
+    deleteTask(projectId, taskId, callback) {
+        const deleteReq = this.#createRequest("DELETE",
+            `/tasks/${taskId}`);
+        deleteReq.onload = () => {
+            if (deleteReq.status !== 200) {
+                console.error(deleteReq);
+                return;
+            }
+
+            // Check if needs to sync the tasks or only remove the deleted task
+            // from the cached list.
+            const {oldSync, newSync} =
+                JSON.parse(deleteReq.responseText);
+            if (oldSync !== this._tasksSync[projectId]) {
+                // Current cached tasks are not synced with the server.
+                this.syncTasks(projectId, null, true);
+            } else {
+                // Only remove the deleted task instead of sending a new
+                // request to sync the tasks.
+                this._tasks[projectId] = this._tasks[projectId].filter(
+                    t => t.id !== taskId);
+                this._tasksSync[projectId] = newSync;
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            }
+        };
+        deleteReq.send();
     }
 
     /**

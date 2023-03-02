@@ -144,6 +144,7 @@ class TodosContext {
             // project.
             const {oldSync, newSync} =
                 JSON.parse(updateReq.responseText);
+            callback?.(project);
             if (oldSync !== this._projectsSync) {
                 // Current cached projects are not synced with the server.
                 this.syncProjects(null, true);
@@ -159,7 +160,6 @@ class TodosContext {
                 this._projectsSync = newSync;
                 this.onUpdatedProjects?.(this._projects);
             }
-            callback?.(project);
         };
         updateReq.send(JSON.stringify(project));
     }
@@ -337,6 +337,56 @@ class TodosContext {
             }
         };
         createReq.send(JSON.stringify(newTask));
+    }
+
+    /**
+     * Updates a given task in the server asynchronously. If the tasks of the
+     * given task's project aren't synced, then they get synced. After the task
+     * gets updated, the given callback gets called.
+     *
+     * If the task cannot be found, then the onmissing callback gets called.
+     *
+     * @param projectId The project id of the task to update.
+     * @param task The task to update. This object must contain id, title and
+     *             description.
+     * @param callback Optional. A function that gets the updated task.
+     * @param onmissing  Optional. A function that get no arguments.
+     */
+    updateTask(projectId, task, callback, onmissing) {
+        const updateReq = this.#createRequest("PUT", "/tasks/update/");
+        updateReq.onload = () => {
+            if (updateReq.status === 404) {
+                onmissing?.();
+                return;
+            }
+            if (updateReq.status !== 200) {
+                console.error(updateReq);
+                return;
+            }
+
+            // Check if needs to sync the tasks or only change the updated
+            // task.
+            const {oldSync, newSync} =
+                JSON.parse(updateReq.responseText);
+            callback?.(task);
+            if (oldSync !== this._tasksSync[projectId]) {
+                // Current cached tasks are not synced with the server.
+
+                this.syncTasks(projectId, null, true);
+            } else {
+                // Only updating the current task instead of sending a new
+                // request to sync the task.
+                for (const t of this._tasks[projectId]) {
+                    if (t.id === task.id) {
+                        t.title = task.title;
+                        t.description = task.description;
+                    }
+                }
+                this._tasksSync[projectId] = newSync;
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            }
+        };
+        updateReq.send(JSON.stringify(task));
     }
 
     /**

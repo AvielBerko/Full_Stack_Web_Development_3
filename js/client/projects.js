@@ -196,35 +196,69 @@ class ProjectsPage extends Page {
         this.tasksContainer.innerHTML = '';
         for (const task of tasks) {
             // Creates a new task item in the list from the task template.
-            const taskElem = this.taskTemplate.content.cloneNode(true);
-            taskElem.querySelector(".task").id = "task-" + task.id;
-            taskElem.querySelector(".task-title").textContent = task.title;
-
-            // When clicking on the task, toggle expansion of the task.
-            const taskExpand = taskElem.querySelector(".task-expand");
-            const shortDesc = taskElem.querySelector(".task-desc-short");
-            shortDesc.textContent = task.description + "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-            taskElem.querySelector(".task-desc-long").textContent =
-                shortDesc.textContent;
-            taskElem.querySelector(".task-expand-btn").onclick = ev => {
-                task.expanded = !task.expanded;
-                if (task.expanded) {
-                    shortDesc.classList.add("hidden");
-                    taskExpand.classList.remove("hidden");
-                } else {
-                    shortDesc.classList.remove("hidden");
-                    taskExpand.classList.add("hidden");
-                }
-            }
-
-            taskElem.querySelector(".task-complete").onclick = ev => {
-                App.context.todos.completeTask(task.parent, task.id);
-            }
-            taskElem.querySelector(".task-delete").onclick = ev => {
-                App.context.todos.deleteTask(task.parent, task.id);
-            }
-            this.tasksContainer.append(taskElem);
+            this.createTaskTemplate(task);
         }
+    }
+
+    createTaskTemplate(task) {
+        const taskElem = this.taskTemplate.content.cloneNode(true);
+        const taskHeader = taskElem.querySelector(".task-header");
+        const taskForm = taskElem.querySelector(".task-form");
+        const taskExpand = taskElem.querySelector(".task-expand");
+        const shortDesc = taskElem.querySelector(".task-desc-short");
+        const inputTitle = taskElem.querySelector(".task-title-input");
+        const inputDesc = taskElem.querySelector(".task-desc-input");
+
+        taskElem.querySelector(".task-title").textContent = task.title;
+        inputTitle.value = task.title;
+        shortDesc.textContent = task.description;
+        taskElem.querySelector(".task-desc-long").textContent =
+            task.description;
+        inputDesc.value = task.description;
+
+        taskElem.querySelector(".task-complete").onclick = ev => {
+            App.context.todos.completeTask(task.parent, task.id);
+        }
+        taskElem.querySelector(".task-delete").onclick = ev => {
+            App.context.todos.deleteTask(task.parent, task.id);
+        }
+
+        // When clicking on the task, toggle expansion of the task.
+        taskElem.querySelector(".task-expand-btn").onclick = ev => {
+            task.expanded = !task.expanded;
+            if (task.expanded) {
+                shortDesc.classList.add("hidden");
+                taskExpand.classList.remove("hidden");
+            } else {
+                shortDesc.classList.remove("hidden");
+                taskExpand.classList.add("hidden");
+            }
+        }
+
+        taskElem.querySelector(".task-start-edit").onclick = ev => {
+            taskHeader.classList.add("hidden");
+            taskForm.classList.remove("hidden");
+        }
+        taskElem.querySelector(".task-cancel-edit").onclick = ev => {
+            taskHeader.classList.remove("hidden");
+            taskForm.classList.add("hidden");
+        }
+        taskElem.querySelector(".task-submit-edit").onclick = ev => {
+            // Updates the task with the new title and description.
+            taskHeader.classList.remove("hidden");
+            taskForm.classList.add("hidden");
+            App.context.todos.updateTask(task.parent, {
+                id: task.id,
+                title: inputTitle.value,
+                description: inputDesc.value,
+            }, null, () => {
+                // Called when the task is missing. Probably because it got
+                // deleted.
+                App.context.todos.syncTasks(task.parent);
+                alert("The task got deleted while you were editing it")
+            });
+        }
+        this.tasksContainer.append(taskElem);
     }
 
 

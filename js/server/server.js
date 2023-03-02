@@ -489,7 +489,48 @@ class Server {
             request.url === "/tasks/update") {
             // This request asks to update a given task's data.
 
-            request.setStatus(501);
+            // Validate that the request has a task id, and at least a
+            // title to update.
+            let taskId;
+            const updatedTask = {};
+            try {
+                const {id, title, ...rest} = JSON.parse(request.body)
+                if (!id || !title) {
+                    request.setStatus(400);
+                    return;
+                }
+                taskId = id.toString();
+                updatedTask.title = title.toString();
+                updatedTask.description = rest.description?.toString() ?? "";
+            } catch {
+                request.setStatus(400);
+                return;
+            }
+
+            // Checks that the task exists, and copies data from the old task.
+            try {
+                const oldTask = this.db.get(taskId);
+                updatedTask.creator = oldTask.creator;
+                updatedTask.complete = oldTask.complete;
+                updatedTask.parent = oldTask.parent;
+            } catch {
+                request.setStatus(404);
+                return;
+            }
+
+            // Updates the project and creates a new sync.
+            this.db.update(taskId, updatedTask);
+            const project = this.db.get(updatedTask.parent);
+            const oldSync = project.tasksSync;
+            const newSync = generateUUID();
+            project.tasksSync = newSync;
+            this.db.update(updatedTask.parent, project);
+
+            request.setStatus(200);
+            request.responseText = JSON.stringify({
+                oldSync: oldSync,
+                newSync: newSync,
+            });
         } else if (request.method === "DELETE") {
             // This request asks to delete a given task. The given task id can
             // be found in the url.

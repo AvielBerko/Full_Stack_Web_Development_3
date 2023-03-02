@@ -340,6 +340,14 @@ class RegisterPage extends Page {
 
 }
 
+/*
+* If the checkbox to keep logged in is checked, the function saves the
+* username in cookies, so next time the website will auto login.
+*/
+function setAutoLogin(apiKey) {
+    const maxAge = Math.floor(60 * 60 * 24 * API_KEY_DAYS);
+    setCookie(APIKEY_COOKIE_NAME, apiKey, maxAge);
+}
 
 // ################################ VALIDATION ################################
 

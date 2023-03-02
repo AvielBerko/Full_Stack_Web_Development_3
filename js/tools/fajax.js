@@ -38,11 +38,13 @@ class Network {
     static send(request, callback) {
         const timeToSend = request.toRequestString().length
             / Network.charsPerSec * 1000;
+        console.log(request.toRequestString());
         setTimeout(() => {
             // The server will write its respond in the request object.
             Network.server.handle(request);
             const timeToReceive = request.toResponseString().length
                 / Network.charsPerSec * 1000;
+            console.log(request.toResponseString());
             setTimeout(() => callback(request), timeToReceive);
         }, timeToSend);
     }
@@ -50,7 +52,7 @@ class Network {
 /**
  * The network's transmission speed of the requests and responses.
  */
-Network.charsPerSec = 1000;
+Network.charsPerSec = 10000;
 
 /**
  * FXMLHttpRequest handles client's fake Http requests and sends them to a fake

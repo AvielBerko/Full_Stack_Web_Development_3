@@ -23,7 +23,6 @@ class Network {
      */
     static setServer(server) {
         Network.server = server
-        Network.mode = 1;
     }
 
     /**
@@ -37,51 +36,21 @@ class Network {
      *                 response.
      */
     static send(request, callback) {
-        const timeToWait = Math.random() * (Network._maxMs - Network._minMs) +
-            Network._minMs;
+        const timeToSend = request.toRequestString().length
+            / Network.charsPerSec * 1000;
         setTimeout(() => {
             // The server will write its respond in the request object.
             Network.server.handle(request);
-            callback(request);
-        }, timeToWait);
-    }
-
-    /**
-     * Sets the network "slowness" mode. It can be one of the following modes:
-     * * 0 - Local: Waits 0ms for the response.
-     * * 1 - Neighbour [default]: Waits between 75ms to 200ms for the
-     *                            response.
-     * * 2 - Abroad: Waits between 200ms to 1500ms for the response.
-     * * 3 - Far Far Away: Waits between 2500ms to 10000ms for the response.
-     *
-     * @param mode The wanted mode from 0 to 3.
-     */
-    static set mode(mode) {
-        switch (mode) {
-            case 0:
-                Network._mode = 0;
-                Network._minMs = 0;
-                Network._maxMs = 0;
-                return;
-            case 2:
-                Network._mode = 2;
-                Network._minMs = 200;
-                Network._maxMs = 1500;
-                return;
-            case 3:
-                Network._mode = 3;
-                Network._minMs = 2500;
-                Network._maxMs = 10000;
-                return;
-            default:
-            case 1:
-                Network._mode = 1;
-                Network._minMs = 75;
-                Network._maxMs = 200;
-                return;
-        }
+            const timeToReceive = request.toResponseString().length
+                / Network.charsPerSec * 1000;
+            setTimeout(() => callback(request), timeToReceive);
+        }, timeToSend);
     }
 }
+/**
+ * The network's transmission speed of the requests and responses.
+ */
+Network.charsPerSec = 1000;
 
 /**
  * FXMLHttpRequest handles client's fake Http requests and sends them to a fake
@@ -300,6 +269,46 @@ class FXMLHttpRequest extends EventTarget {
             return;
         }
         console.error("Used FXMLHttpRequest.setResponseHeader() in client");
+    }
+
+    /**
+     * Generates a string of the request's real http message. If readyState is
+     * UNSET, then empty string will be returned.
+     *
+     * @return String of this http request.
+     */
+    toRequestString() {
+        if (this.readyState === 0) {
+            return "";
+        }
+
+        let result = `${this.method} ${this.url} HTTP/1.1\r\n`;
+        for (const header in this.requestHeaders) {
+            result += `${header}: ${this.requestHeaders[header]}\r\n`;
+        }
+        result += "\r\n" + (this.body ?? "");
+
+        return result;
+    }
+
+    /**
+     * Generates a string of the response's real http message. If readyState is
+     * not DONE or RESPONSE, then empty string will be returned.
+     *
+     * @return String of this http response.
+     */
+    toResponseString() {
+        if (this.readyState < 4) {
+            return "";
+        }
+
+        let result = `HTTP/1.1 ${this.status} ${this.statusText}\r\n`;
+        for (const header in this.responseHeaders) {
+            result += `${header}: ${this.responseHeaders[header]}\r\n`;
+        }
+        result += "\r\n" + (this.responseText ?? "");
+
+        return result;
     }
 
     /**

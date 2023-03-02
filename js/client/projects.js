@@ -91,6 +91,13 @@ class ProjectsPage extends Page {
         App.context.todos.syncProjects();
     }
 
+    onNav(ev) {
+        switch (ev.target.id) {
+            case "logout":
+                return ["login", true, false]
+        }
+    }
+
     /**
      * Updates the html projects list to display the given projects. If no
      * project is selected or the selected project got deleted, then selects

@@ -306,6 +306,14 @@ class Server {
                     request.setStatus(403);
                     return;
                 }
+
+                // Remove the project's tasks.
+                this.db.getTableItems(TASKS_TABLE_NAME).filter(
+                    task => task.obj.parent === projectId
+                ).forEach(
+                    task => this.db.remove(task.uuid)
+                );
+
                 this.db.remove(projectId);
             } catch {
                 // Ignore missing project when trying to delete because who

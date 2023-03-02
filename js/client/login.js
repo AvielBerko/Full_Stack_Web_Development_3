@@ -116,7 +116,18 @@ class LoginPage extends Page {
         const request = new FXMLHttpRequest();
 
         request.onload = () => {
-            this.handleLoginResponse(request);
+            const attemptsCookie = credentials.username + ATTEMPTS_COOKIE_POSTFIX;
+            if (this.handleLoginResponse(request)) {
+                removeCookie(attemptsCookie);
+            }
+            else {
+                const attemptsCookie = credentials.username + ATTEMPTS_COOKIE_POSTFIX;
+                const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
+                if (attempts <= ATTEMPTS_MAX) {
+                    // Updates the the number of attempts in the attempts cookie.
+                    setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, 60* ATTEMPTS_MINUTES);
+                }
+            }
         };
 
         const requestData = JSON.stringify(credentials);
@@ -135,16 +146,11 @@ class LoginPage extends Page {
         if (request.status === 200) {
             console.log("Login successful!");
             this.login(request.responseText);
+            return true;
         } else {
             // console.error("Invalid username or password");
             alert("Invalid username or password");
-            const username = JSON.parse(request.body)['username']
-            const attemptsCookie = username + ATTEMPTS_COOKIE_POSTFIX;
-            const attempts = parseInt(getCookie(attemptsCookie) ?? 0);
-            if (attempts <= ATTEMPTS_MAX) {
-                // Updates the the number of attempts in the attempts cookie.
-                setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, 60* ATTEMPTS_MINUTES);
-            }
+            return false;
         }
     }
 
@@ -174,11 +180,10 @@ class LoginPage extends Page {
      */
     handleAutoLoginResponse(request) {
         if (request.status === 200) {
-            alert("Auto logged in");
+            console.log("Auto logged in");
             this.getin(request.body);
         } else {
-            // console.error("Invalid username or password");
-            alert(`Auto login failed - ${request.responseText}`)
+            console.error(`Auto login failed - ${request.responseText}`)
             //alert("Auto login failed due to wrong API Key");
         }
     }

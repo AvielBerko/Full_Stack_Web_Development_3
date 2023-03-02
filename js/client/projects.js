@@ -33,9 +33,8 @@ class ProjectsPage extends Page {
     enter(apiKey, ...args) {
         if (!App.context.todos || App.context.todos.apiKey !== apiKey) {
             if (!apiKey) {
-                apiKey = "DEMO_KEY";
-                /*this.navigate("login");
-                return;*/
+                this.navigate("login");
+                return;
             }
             App.context.todos = new TodosContext(apiKey);
         }

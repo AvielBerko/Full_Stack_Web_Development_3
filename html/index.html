@@ -64,7 +64,7 @@
 
 					<div class="txt1 text-center p-t-129 p-b-20">
 						<span">
-							Or Sign In Using
+							Or Login Using
 							</span>
 					</div>
 
@@ -84,7 +84,7 @@
 
 					<div class="flex-col-c p-t-80">
 						<span class="txt1 p-b-17" id="signup-text">
-							Or Sign Up Using
+							Don't have an account?
 						</span>
 
 						<a class="txt2 spa-nav" id="register">
@@ -142,7 +142,7 @@
 
 					<div class="txt1 text-center p-t-64 p-b-20">
 						<span">
-							Or Login Using
+							Or Signup Using
 							</span>
 					</div>
 
@@ -162,10 +162,10 @@
 
 					<div class="flex-col-c p-t-80">
 						<span class="txt1 p-b-17" id="signup-text">
-							Or Login Using
+							Already have an account?
 						</span>
 
-						<a class="txt2 spa-nav" id="register">
+						<a class="txt2 spa-nav" id="login">
 							Login
 						</a>
 					</div>
@@ -173,6 +173,95 @@
 			</div>
 		</div>
 	</template>
+	<template id="template-projects">
+        <div class="container">
+            <div id="project-header" class="row">
+                <h2 id="project-title"></h2>
+                <p id="project-desc"></p>
+                <button id="project-start-edit">Edit</button>
+                <button id="project-delete">Delete</button>
+            </div>
+            <div id="project-form" class="row hidden">
+                <div>
+                    <label for="project-title-input">Title</label>
+                </div>
+                <div>
+                    <input type="text" id="project-title-input"
+                           name="project-title-input"
+                           placeholder="Type here the project's title">
+                    </input>
+                </div>
+                <div>
+                    <label for="project-desc-input">Description</label>
+                </div>
+                <div>
+                    <textarea id="project-desc-input" name="project-desc-input"
+                           placeholder="Type here the project's description"
+                    ></textarea>
+                </div>
+                <div>
+                    <button id="project-submit-edit">Save</button>
+                    <button id="project-cancel-edit">Cancel</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div id="projects-container">
+                        <!-- Projects List -->
+                    </div>
+                    <button id="project-new">New Project</button>
+                </div>
+                <div id="tasks-list" class="col-9">
+                    <button id="task-new">New Task</button>
+                    <div id="tasks-container">
+                        <!-- Tasks List -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template id="template-project">
+        <div class="project-btn">
+            <p class="project-title"></p>
+        </div>
+    </template>
+    <template id="template-task">
+        <div class="task">
+            <div class="task-header task-expand-btn">
+                <button class="task-complete">Complete</button>
+                <p class="task-title"></p>
+                <p class="task-desc-short"></p>
+                <div class="task-expand hidden">
+                    <p class="task-desc-long"></p>
+                    <button class="task-start-edit">Edit</button>
+                    <button class="task-delete">Delete</button>
+                </div>
+            </div>
+            <div class="task-form hidden">
+                <div>
+                    <label for="task-title-input">Title</label>
+                </div>
+                <div>
+                    <input type="text" class="task-title-input"
+                           name="project-title-input"
+                           placeholder="Type here the task's title">
+                    </input>
+                </div>
+                <div>
+                    <label for="task-desc-input">Description</label>
+                </div>
+                <div>
+                    <textarea class="task-desc-input" name="task-desc-input"
+                           placeholder="Type here the task's description"
+                    ></textarea>
+                </div>
+                <div>
+                    <button class="task-submit-edit">Save</button>
+                    <button class="task-cancel-edit">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </template>
 	<template id="template-empty">
 		<button class="spa-nav" id="register">
 			Register
@@ -184,6 +273,7 @@
 			Logout
 		</button>
 	</template>
+	
 	<div id="dropDownSelect1"></div>
 	<script src="../js/client/spa.js"></script>
 	<script src="../js/fajax.js"></script>
@@ -193,6 +283,8 @@
 	<script src="../js/client/login.js"></script>
 	<script src="../js/main.js"></script>
 	<script src="../js/cookie_handler.js"></script>
+	<script src="../../js/client/todos_context.js"></script>
+    <script src="../../js/client/projects.js"></script>
 
 </body>
 

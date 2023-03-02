@@ -9,7 +9,16 @@
 
     <title>Projects</title>
 
-    <link rel="stylesheet" href="projects.css">
+	<title>Todos</title>
+	<link rel="icon" type="image/x-icon" href="../images/icon.jpg">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="../../fonts/iconic/css/material-design-iconic-font.min.css">
+	<link rel="stylesheet" type="text/css" href="../../fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="../../css/reuse/util.css">
+	<link rel="stylesheet" type="text/css" href="../../css/login.css">
+    <link rel="stylesheet" type="text/css" href="../../css/projects.css">
+	<link rel="shortcut icon" href="#">
 </head>
 
 <body>
@@ -19,47 +28,52 @@
 
     <!-- templates -->
     <template id="template-projects">
-        <div class="container">
-            <div id="project-header" class="row">
-                <h2 id="project-title"></h2>
-                <p id="project-desc"></p>
-                <button id="project-start-edit">Edit</button>
-                <button id="project-delete">Delete</button>
-            </div>
-            <div id="project-form" class="row hidden">
-                <div>
-                    <label for="project-title-input">Title</label>
+        <header class="header-todos">
+            <button class="logout-todos spa-nav">Logout</button>
+        </header>
+        <div class="container-todos">
+            <div class="container-card-todos">
+                <div id="project-header" class="row">
+                    <h2 id="project-title"></h2>
+                    <p id="project-desc"></p>
+                    <button id="project-start-edit" class="edit-btn">Edit</button>
+                    <button id="project-delete" class="delete-btn">Delete</button>
                 </div>
-                <div>
-                    <input type="text" id="project-title-input"
-                           name="project-title-input"
-                           placeholder="Type here the project's title">
-                    </input>
-                </div>
-                <div>
-                    <label for="project-desc-input">Description</label>
-                </div>
-                <div>
-                    <textarea id="project-desc-input" name="project-desc-input"
-                           placeholder="Type here the project's description"
-                    ></textarea>
-                </div>
-                <div>
-                    <button id="project-submit-edit">Save</button>
-                    <button id="project-cancel-edit">Cancel</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-3">
-                    <div id="projects-container">
-                        <!-- Projects List -->
+                <div id="project-form" class="row hidden">
+                    <div>
+                        <label for="project-title-input">Title</label>
                     </div>
-                    <button id="project-new">New Project</button>
+                    <div>
+                        <input type="text" id="project-title-input"
+                               name="project-title-input"
+                               placeholder="Type here the project's title">
+                        </input>
+                    </div>
+                    <div>
+                        <label for="project-desc-input">Description</label>
+                    </div>
+                    <div>
+                        <textarea id="project-desc-input" name="project-desc-input"
+                               placeholder="Type here the project's description"
+                        ></textarea>
+                    </div>
+                    <div>
+                        <button id="project-submit-edit" class="save-btn">Save</button>
+                        <button id="project-cancel-edit" class="cancel-btn">Cancel</button>
+                    </div>
                 </div>
-                <div id="tasks-list" class="col-9">
-                    <button id="task-new">New Task</button>
-                    <div id="tasks-container">
-                        <!-- Tasks List -->
+                <div class="projects-tasks-container">
+                    <div id="projects-list">
+                        <button id="project-new">New Project</button>
+                        <div id="projects-container">
+                            <!-- Projects List -->
+                        </div>
+                    </div>
+                    <div id="tasks-list">
+                        <button id="task-new">New Task</button>
+                        <div id="tasks-container">
+                            <!-- Tasks List -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,20 +82,22 @@
 
     <template id="template-project">
         <div class="project-btn">
-            <p class="project-title"></p>
+            <span class="project-title"></span>
         </div>
     </template>
 
     <template id="template-task">
         <div class="task">
             <div class="task-header task-expand-btn">
-                <button class="task-complete">Complete</button>
-                <p class="task-title"></p>
-                <p class="task-desc-short"></p>
-                <div class="task-expand hidden">
-                    <p class="task-desc-long"></p>
-                    <button class="task-start-edit">Edit</button>
-                    <button class="task-delete">Delete</button>
+                <button class="task-complete"></button>
+                <div>
+                    <span class="task-title"></span>
+                    <p class="task-desc-short"></p>
+                    <div class="task-expand hidden">
+                        <p class="task-desc-long"></p>
+                        <button class="task-start-edit edit-btn">Edit</button>
+                        <button class="task-delete delete-btn">Delete</button>
+                    </div>
                 </div>
             </div>
             <div class="task-form hidden">
@@ -103,8 +119,8 @@
                     ></textarea>
                 </div>
                 <div>
-                    <button class="task-submit-edit">Save</button>
-                    <button class="task-cancel-edit">Cancel</button>
+                    <button class="task-submit-edit save-btn">Save</button>
+                    <button class="task-cancel-edit cancel-btn">Cancel</button>
                 </div>
             </div>
         </div>

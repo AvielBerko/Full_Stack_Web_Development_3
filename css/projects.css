@@ -65,6 +65,7 @@
     background-color: firebrick;
     color: white;
     padding: 5px;
+    margin-top: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
     transition: all 100ms;
@@ -78,6 +79,7 @@
     background-color: #c99510;
     color: white;
     padding: 5px;
+    margin-top: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
     transition: all 100ms;

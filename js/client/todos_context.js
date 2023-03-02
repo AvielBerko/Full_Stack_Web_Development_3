@@ -99,7 +99,7 @@ class TodosContext {
         const syncReq = this.#createRequest("GET", "/projects/sync");
         syncReq.onload = () => {
             if (syncReq.status !== 200) {
-                console.error(projectsReq);
+                console.error(syncReq);
                 return;
             }
 
@@ -222,6 +222,7 @@ class TodosContext {
             const {projectId, oldSync, newSync} =
                 JSON.parse(createReq.responseText);
             newProject.id = projectId;
+            callback?.(newProject);
             if (oldSync !== this._projectsSync) {
                 // Current cached projects are not synced with the server.
                 this.syncProjects(null, true);
@@ -232,9 +233,67 @@ class TodosContext {
                 this._projectsSync = newSync;
                 this.onUpdatedProjects?.(this._projects);
             }
-            callback?.(newProject);
         };
         createReq.send(JSON.stringify(newProject));
+    }
+
+    /**
+     * Syncs the tasks of a given project with the server asynchronously.
+     * After finished synching with the server, the callback onUpdatedTasks and
+     * the given callback will be called with the updated tasks.
+     *
+     * @param projectId The project to sync its tasks.
+     * @param callback  Optional. A function that gets the project id and the
+     *                  tasks.
+     * @param force     Optional. When true, gets the tasks from the server
+     *                  even if already synced.
+     */
+    syncTasks(projectId, callback, force = false) {
+        const _getTasks = () => {
+            const tasksReq = this.#createRequest("GET",
+                `/tasks?parent=${projectId}`);
+            tasksReq.onload = () => {
+                if (tasksReq.status !== 200) {
+                    console.error(tasksReq);
+                    return;
+                }
+
+                const response = JSON.parse(tasksReq.responseText);
+                this._tasks[projectId] = response.tasks;
+                this._tasksSync[projectId] = response.sync;
+
+                callback?.(projectId, this._tasks[projectId]);
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+            }
+            tasksReq.send();
+        };
+
+        // If not forced, checks if already have cached tasks.
+        if (force || !this._tasksSync[projectId]) {
+            _getTasks();
+            return;
+        } 
+
+        // Already have cached tasks, therefore, checks if needs to sync.
+        const syncReq = this.#createRequest("GET",
+            `/tasks/sync?parent=${projectId}`);
+        syncReq.onload = () => {
+            if (syncReq.status !== 200) {
+                console.error(syncReq);
+                return;
+            }
+
+            if (this._tasksSync[projectId] === syncReq.responseText) {
+                // Doesn't need to sync.
+                callback?.(projectId, this._tasks[projectId]);
+                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+                return;
+            }
+
+            // Needs to sync.
+            _getTasks();
+        };
+        syncReq.send();
     }
 
     /**
@@ -264,15 +323,11 @@ class TodosContext {
             const {taskId, oldSync, newSync} =
                 JSON.parse(createReq.responseText);
             newTask.id = taskId;
+            callback?.(newTask);
             if (true || oldSync !== this._tasksSync[projectId]) {
                 // Current cached project's tasks are not synced with the
                 // server.
-
-                // this.syncTasks(projectId, null, true);
-                if (!this._tasks[projectId])this._tasks[projectId] = [];
-                this._tasks[projectId].push(newTask);
-                this._tasksSync[projectId] = newSync;
-                this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
+                this.syncTasks(projectId, null, true);
             } else {
                 // Only adds the new task instead of sending a new request
                 // to sync the project's tasks.
@@ -280,7 +335,6 @@ class TodosContext {
                 this._tasksSync[projectId] = newSync;
                 this.onUpdatedTasks?.(projectId, this._tasks[projectId]);
             }
-            callback?.(newTask);
         };
         createReq.send(JSON.stringify(newTask));
     }
@@ -310,8 +364,7 @@ class TodosContext {
                 JSON.parse(completeReq.responseText);
             if (oldSync !== this._tasksSync[projectId]) {
                 // Current cached tasks are not synced with the server.
-
-                // this.syncTasks(projectId, null, true);
+                this.syncTasks(projectId, null, true);
             } else {
                 // Only remove the completed task instead of sending a new
                 // request to sync the tasks.

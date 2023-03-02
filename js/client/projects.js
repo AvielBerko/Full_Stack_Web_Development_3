@@ -242,6 +242,8 @@ class ProjectsPage extends Page {
         this.projectTitleInput.value = this.currentProject.title;
         this.projectDescInput.value = this.currentProject.description;
         this.tasksList.classList.remove("hidden");
+
+        App.context.todos.syncTasks(project.id);
     }
 
     /**

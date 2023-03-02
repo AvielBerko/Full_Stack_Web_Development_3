@@ -344,15 +344,67 @@ class Server {
         }
         const user = this.db.get(userId);
 
-        if (request.method === "GET" && request.url === "/tasks") {
-            // This request asks get a given project's tasks.
+        if (request.method === "GET" &&
+            request.url.startsWith("/tasks?parent=")) {
+            // This request asks get a given project's tasks. The tasks' parent
+            // is given in the url's parameters.
 
-            request.setStatus(501);
+            const projectId = request.url.substring(
+                "/tasks?parent=".length);
+            let sync;
+
+            // Checks that the project exists and authorizes the user.
+            try {
+                const project = this.db.get(projectId);
+                if (project.creator !== userId) {
+                    request.setStatus(403);
+                    return;
+                }
+                sync = project.tasksSync;
+            } catch {
+                request.setStatus(404);
+                return;
+            }
+
+            // Creates the tasks list to send in the response.
+            const tasks = this.db.getTableItems(TASKS_TABLE_NAME).filter(
+                task => task.obj.parent === projectId
+            ).map(({uuid, obj}) => ({
+                id: uuid,
+                title: obj.title,
+                description: obj.description,
+                parent: obj.parent,
+            }));
+
+            request.setStatus(200);
+            request.responseText = JSON.stringify({
+                tasks: tasks,
+                sync: sync,
+            });
         } else if (request.method === "GET" &&
-            request.url === "/tasks/sync") {
+            request.url.startsWith("/tasks/sync?parent=")) {
             // This request asks get the sync value of a given project's tasks.
+            // The tasks' parent is given in the url's parameters.
 
-            request.setStatus(501);
+            let sync;
+            const projectId = request.url.substring(
+                "/tasks/sync?parent=".length);
+
+            // Checks that the project exists and authorizes the user.
+            try {
+                const project = this.db.get(projectId);
+                if (project.creator !== userId) {
+                    request.setStatus(403);
+                    return;
+                }
+                sync = project.tasksSync;
+            } catch {
+                request.setStatus(404);
+                return;
+            }
+
+            request.setStatus(200);
+            request.responseText = sync;
         } else if (request.method === "POST" &&
             request.url === "/tasks/new") {
             // This request asks to creates a new task in a given project.
@@ -455,7 +507,8 @@ class Server {
      * @return String of the request type
      */
     #getRequestType(url) {
-        const endRequest = url.indexOf('/', 1);
+        let endRequest = url.indexOf('/', 1);
+        if (endRequest < 0) endRequest = url.indexOf('?');
         return url.substring(0, endRequest >= 0 ? endRequest : url.length); 
     }
 

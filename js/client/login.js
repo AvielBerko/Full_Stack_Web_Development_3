@@ -26,8 +26,7 @@ class LoginPage extends Page {
         super('login');
     }
 
-    enter(...args) {
-        const logout = args[0];
+    enter(logout, ...args) {
         const apiKey = getCookie(APIKEY_COOKIE_NAME);
         if (logout) {
             if (!apiKey) {
@@ -76,8 +75,10 @@ class LoginPage extends Page {
     */
     autoLogin(apiKey) {
         if (apiKey) {
-            console.log("Auto logged in");
-            return this.getin(apiKey);
+            this.requsetAutoLogin(apiKey);
+        }
+        else {
+            console.log("No Auto Login");
         }
     }
 
@@ -86,7 +87,7 @@ class LoginPage extends Page {
     */
     getin(/*username,*/ apiKey) {
         // sessionStorage.currentUsername = username;
-        this.navigate(null, apiKey);  // Move to main page
+        this.navigate('projects', apiKey);  // Move to projects page
         return true;
     }
 
@@ -146,6 +147,41 @@ class LoginPage extends Page {
                 expires.setMinutes(expires.getMinutes() + ATTEMPTS_MINUTES);
                 setCookie(attemptsCookie, isNaN(attempts) ? 1 : attempts + 1, expires);
             }
+        }
+    }
+
+    /**
+     * Sends a login FAJAX request to the server if the form was filled correctly and
+     * the user is not blocked by 'Too many attampts'.
+     */
+    requsetAutoLogin(apiKey) {
+
+        const request = new FXMLHttpRequest();
+
+        request.onload = () => {
+            this.handleAutoLoginResponse(request);
+        };
+
+        const requestData = apiKey
+
+        request.open('post', '/autologin');
+        request.send(requestData);
+    }
+
+    /**
+     * Handles the FAJAX respnse from the server.
+     * Logges the user in if the credentials were correct, increases the number of
+     * wrong attempts if they weren't.
+     * @param request - The FAJAX object with the response details.
+     */
+    handleAutoLoginResponse(request) {
+        if (request.status === 200) {
+            alert("Auto logged in");
+            this.getin(request.body);
+        } else {
+            // console.error("Invalid username or password");
+            alert(`Auto login failed - ${request.responseText}`)
+            //alert("Auto login failed due to wrong API Key");
         }
     }
 
@@ -287,7 +323,7 @@ class RegisterPage extends Page {
     */
     getin(/*username,*/ apiKey) {
         // sessionStorage.currentUsername = username;
-        this.navigate('empty', apiKey);  // Move to main page
+        this.navigate('projects', apiKey);  // Move to main page
     }
 
 }
